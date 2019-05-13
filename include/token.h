@@ -2,11 +2,14 @@
 #include <vector>
 #include "scanner.h"
 typedef enum{
+	kCat_NULL,
 	kCat_OPERATOR,
 	kCat_KEYWORD,
 	kCat_VALUE,
 	kCat_IDENTIFIER,
 	kCat_EOS, //End Of Statement
+	kCAT_OPENSCOPE,
+	kCAT_CLOSESCOPE,
 	kCat_UNKNOWN,
 	kCat_TYPE
 }TokenCAT;
@@ -14,7 +17,20 @@ typedef enum{
 typedef enum 
 {
 	kToken_EOF,
-	kToken_UNKNOWN
+	kToken_UNKNOWN,
+	kToken_SEMICOLON,
+	kToken_COMMA,
+	kToken_STRING,
+	kToken_NUMBER,
+	kToken_NUMBER_FP, //floating point
+	kToken_NUMBER8,
+	kToken_NUMBER16,
+	kToken_NUMBER32,
+	kToken_NUMBER64,
+	kToken_NUMBER128,
+	kToken_POINTER,
+	kToken_BOOL,
+	kToken_PRINT
 
 } TokenID;
 
@@ -35,6 +51,11 @@ typedef struct{
 		cObjArray.clear();
 		cObjArray.push_back(x);
 		cargo = x->cargo;
+	}
+	void addChar(Character *x)
+	{
+		cargo += x->cargo;
+		cObjArray.push_back(x);
 	}
 } Token;
 

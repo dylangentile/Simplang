@@ -1,4 +1,5 @@
 #include "error.h"
+#include <cstdlib> //abort
 using namespace std;
 
 
@@ -28,6 +29,7 @@ error(unsigned id, string theMsg, Token *mToken)
 {
 	myErrors->errorCount++;
 	myErrors->msg += "\n\n" + theMsg;
+	abort();
 }
 
 string
