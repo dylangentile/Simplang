@@ -15,10 +15,16 @@ ErrorData::~ErrorData()
 
 ErrorData *myErrors = new ErrorData;
 
+/*
 
+^0^ == print cargo
+^1^ == line Index
+^2^ == column index
+
+*/
 
 void
-error(unsigned id, string theMsg)
+error(unsigned id, string theMsg, Token *mToken)
 {
 	myErrors->errorCount++;
 	myErrors->msg += "\n\n" + theMsg;

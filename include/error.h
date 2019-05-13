@@ -1,4 +1,5 @@
 #pragma once
+#include "token.h"
 #include <string>
 
 class ErrorData{
@@ -10,5 +11,5 @@ public:
 };
 
 
-void error(unsigned id, std::string theMsg);
+void error(unsigned id = 666, std::string theMsg = "NULL", Token *mToken = nullptr);
 std::string errorOut();
