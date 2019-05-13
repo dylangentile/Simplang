@@ -17,6 +17,8 @@ Lexer::Lexer()
 	
 	keywordMap.insert(make_pair("print", kToken_PRINT));
 
+	operatorMap.insert(make_pair("=", kToken_EQUALS));
+
 }
 
 Lexer::~Lexer()
@@ -192,9 +194,10 @@ Lexer::fetchTokenPtr()
 
 	if(isIdentifierChar(c1, true))
 	{
-        getCharPackage();
-        if(isIdentifierChar(c1))
+        //getCharPackage();
+		if(isIdentifierChar(myScanner->lookAhead(1)))
         {
+			getCharPackage();
             while(isIdentifierChar(myScanner->lookAhead(1)))
             {
                 theToken->addChar(c1Char);
@@ -215,14 +218,22 @@ Lexer::fetchTokenPtr()
 	if(isNumber(c1))
 	{
 		bool fp = false;
-		while(isNumber(c1) || (c1 == "." && isNumber(myScanner->lookAhead(1))))
+		if (isNumber(myScanner->lookAhead(1)) || (myScanner->lookAhead(1) == "." && isNumber(myScanner->lookAhead(2))))
 		{
-			if(c1 == ".")
+			if (c1 == ".")
 			{
 				fp = true;
 			}
-			theToken->addChar(c1Char);
 			getCharPackage();
+			while (isNumber(myScanner->lookAhead(1)) || (!fp && (c1 == "." && isNumber(myScanner->lookAhead(1)))))
+			{
+				if (c1 == ".")
+				{
+					fp = true;
+				}
+				theToken->addChar(c1Char);
+				getCharPackage();
+			}
 		}
 		theToken->type = fp ? kToken_NUMBER_FP : kToken_NUMBER;
 		theToken->cat = kCat_VALUE;
@@ -245,7 +256,7 @@ Lexer::fetchTokenPtr()
 
 	}
 
-	if(isOperator(c2, theToken->type))
+	if(isOperator(c2, theToken->type) && c2.size() == 2)
 	{
 		getCharPackage();
 		theToken->addChar(c1Char);
@@ -285,5 +296,56 @@ Lexer::lex()
 	}
 }
 
+string
+printTokenArray(vector<Token*>* v)
+{
+	string msg = "";
+
+	for (vector<Token*>::iterator it = v->begin(); it != v->end(); it++)
+	{
+		Token* theToken = *it;
+
+		if (theToken->cat == kCat_TYPE)
+		{
+			if (theToken->type == kToken_NUMBER)
+			{
+				msg += "\n   NUMBER(TYPE): " + theToken->cargo;
+			}
+			else if (theToken->type == kToken_BOOL)
+			{
+				msg += "\n     BOOL(TYPE): " + theToken->cargo;
+			}
+			else if (theToken->type == kToken_STRING)
+			{
+				msg += "\n   STRING(TYPE): " + theToken->cargo;
+			}
+			else if (theToken->type == kToken_NUMBER8)
+			{
+				msg += "\n  NUMBER8(TYPE): " + theToken->cargo;
+			}
+			else if (theToken->type == kToken_NUMBER16)
+			{
+				msg += "\n NUMBER16(TYPE): " + theToken->cargo;
+			}
+			else if (theToken->type == kToken_NUMBER32)
+			{
+				msg += "\n NUMBER32(TYPE): " + theToken->cargo;
+			}
+			else if (theToken->type == kToken_NUMBER64)
+			{
+				msg += "\n NUMBER64(TYPE): " + theToken->cargo;
+			}
+			else if (theToken->type == kToken_NUMBER128)
+			{
+				msg += "\nNUMBER128(TYPE): " + theToken->cargo;
+			}
+			else if (theToken->type == kToken_UNKNOWN)
+			{
+				msg += "\n  UNKNOWN(TYPE): " + theToken->cargo;
+			}
+		}
+	}
+	return msg;
+}
 
 
