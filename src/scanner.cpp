@@ -2,6 +2,7 @@
 #include <fstream>
 #include <sstream>
 
+
 using namespace std;
 
 Scanner::Scanner()
@@ -13,6 +14,7 @@ Scanner::~Scanner()
 {
 
 }
+
 
 void
 Scanner::init(std::string srcFile)

@@ -16,6 +16,7 @@ typedef enum{
 
 typedef enum 
 {
+    kToken_IDENTIFIER,
 	kToken_EOF,
 	kToken_UNKNOWN,
 	kToken_SEMICOLON,

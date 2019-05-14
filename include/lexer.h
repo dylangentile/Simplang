@@ -32,4 +32,4 @@ private:
 
 };
 
-std::string printTokenArray(std::vector<Token*>* v);
+std::string printTokenArray(std::vector<Token*>  *v);

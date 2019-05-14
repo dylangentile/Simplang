@@ -212,6 +212,7 @@ Lexer::fetchTokenPtr()
 			return theToken;
 		}
 		theToken->cat = kCat_IDENTIFIER;
+		theToken->type= kToken_IDENTIFIER;
 		return theToken;
 	}
 
@@ -276,6 +277,7 @@ Lexer::fetchTokenPtr()
 }
 
 
+
 vector<Token*>*
 Lexer::lex()
 {
@@ -284,6 +286,7 @@ Lexer::lex()
 	{
 		Token *theToken;
 		theToken = fetchTokenPtr();
+
 		if(theToken->type == kToken_EOF)
 		{
 			return theV;
@@ -296,13 +299,15 @@ Lexer::lex()
 	}
 }
 
+
 string
-printTokenArray(vector<Token*>* v)
+printTokenArray(vector<Token*> *v)
 {
 	string msg = "";
 
 	for (vector<Token*>::iterator it = v->begin(); it != v->end(); it++)
 	{
+
 		Token* theToken = *it;
 
 		if (theToken->cat == kCat_TYPE)
@@ -343,6 +348,22 @@ printTokenArray(vector<Token*>* v)
 			{
 				msg += "\n  UNKNOWN(TYPE): " + theToken->cargo;
 			}
+			else
+			{
+			    msg += "\n  WHAT IS THIS?: " + theToken->cargo;
+			}
+		}
+		else if(theToken->cat == kCat_IDENTIFIER)
+		{
+		        msg += "\n     IDENTIFIER: " + theToken->cargo;
+		}
+		else if(theToken->cat == kCat_OPERATOR)
+		{
+		        msg += "\n       OPERATOR: " + theToken->cargo;
+		}
+		else
+		{
+		        msg += "\n    NO CATEGORY: " + theToken->cargo;
 		}
 	}
 	return msg;
