@@ -6,9 +6,9 @@ This is a programming language compiler(interpreter for now) that I'm writing.
 
 Basic Types:
 
-num 		Integer or Floating Point. Autocasting. compiler flag to force it to always check
-string
-bool
+- num 		Integer or Floating Point. Autocasting. compiler flag to force it to always check
+- string
+- bool
 
 Specific Types
 - num8 		8 bits
