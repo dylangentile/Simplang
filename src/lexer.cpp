@@ -181,7 +181,7 @@ Lexer::fetchTokenPtr()
 		int laAmount = 0;
 		if(isType(c2, theToken->type, laAmount))
 		{
-			for(int i = 0; i < laAmount - 1; i++)
+			for(int i = 0; i < laAmount - 2; i++)
 			{
 				getCharPackage();
 				theToken->addChar(c1Char);
@@ -205,6 +205,12 @@ Lexer::fetchTokenPtr()
             }
             theToken->addChar(c1Char);
         }
+		if (theToken->cargo == "true" || theToken->cargo == "false")
+		{
+			theToken->cat = kCat_VALUE;
+			theToken->type = kToken_BOOL;
+			return theToken;
+		}
 
 		if(isKeyword(theToken->cargo, theToken->type))
 		{
@@ -243,7 +249,6 @@ Lexer::fetchTokenPtr()
 
 	if(c1 == "\"")
 	{
-		theToken->addChar(c1Char);
 		getCharPackage();
 		while(c1 != "\"")
 		{
@@ -252,8 +257,10 @@ Lexer::fetchTokenPtr()
 			theToken->addChar(c1Char);
 			getCharPackage();
 		}
+		theToken->addChar(c1Char);
 		theToken->type = kToken_STRING;
 		theToken->cat = kCat_VALUE;
+		return theToken;
 
 	}
 
@@ -353,9 +360,44 @@ printTokenArray(vector<Token*> *v)
 			    msg += "\n  WHAT IS THIS?: " + theToken->cargo;
 			}
 		}
+		else if (theToken->cat == kCat_VALUE)
+		{
+			if (theToken->type == kToken_NUMBER)
+			{
+				msg += "\n  NUMBER(VALUE): " + theToken->cargo;
+			}
+			else if (theToken->type == kToken_NUMBER_FP)
+			{
+				msg += "\n NUMBER_FP(VAL): " + theToken->cargo;
+			}
+			else if (theToken->type == kToken_BOOL)
+			{
+				msg += "\n    BOOL(VALUE): " + theToken->cargo;
+			}
+			else if (theToken->type == kToken_STRING)
+			{
+				msg += "\n  STRING(VALUE): " + theToken->cargo;
+			}
+			else
+			{
+				msg += "\n UNKNOWN(VALUE): " + theToken->cargo;
+			}
+			
+		}
 		else if(theToken->cat == kCat_IDENTIFIER)
 		{
 		        msg += "\n     IDENTIFIER: " + theToken->cargo;
+		}
+		else if (theToken->cat == kCat_EOS)
+		{
+			if (theToken->type == kToken_SEMICOLON)
+			{
+				msg += "\n      SEMICOLON: " + theToken->cargo;
+			}
+			else
+			{
+				msg += "\n    UNKNOWN_EOS: " + theToken->cargo;
+			}
 		}
 		else if(theToken->cat == kCat_OPERATOR)
 		{

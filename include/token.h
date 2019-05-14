@@ -1,7 +1,8 @@
 #pragma once
 #include <vector>
 #include "scanner.h"
-typedef enum{
+typedef enum
+{
 	kCat_NULL,
 	kCat_OPERATOR,
 	kCat_KEYWORD,
