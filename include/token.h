@@ -1,6 +1,8 @@
 #pragma once
 #include <vector>
 #include "scanner.h"
+
+
 typedef enum
 {
 	kCat_NULL,
@@ -63,6 +65,10 @@ typedef struct{
 } Token;
 
 
+typedef struct
+{
+	Token* mType, * mIdentifier, * overload = nullptr;
+}Arguement;
 
 
 
