@@ -21,7 +21,7 @@ VarStatement::print()
 }
 
 bool
-VarStatement::compare(string theName)
+VarStatement::compareName(string theName)
 {
 	if (mName == theName)
 		return true;
@@ -41,7 +41,7 @@ FuncStatement::~FuncStatement()
 string
 FuncStatement::print()
 {
-	string msg = "Function: " + mType->cargo + " " + mName + "(";
+	string msg = "\nFunction: " + mType->cargo + " " + mName + "(";
 	for (vector<Arguement*>::iterator it = mArgArray.begin(); it != mArgArray.end(); it++)
 	{
 		Arguement* theArg = *it;
@@ -52,6 +52,36 @@ FuncStatement::print()
 		}
 		msg += ", ";
 	}
-	msg += ")";
+	msg += "):\n";
+	
+	for(vector<Statement*>::iterator it = mStatementArray.begin(); it != mStatementArray.end(); ++it)
+	{
+	    Statement *temp = *it;
+	    msg += temp->print();
+	}
+	return msg;
 
 }
+
+bool
+FuncStatement::compareName(string theName)
+{
+    bool ret = false;
+    for(vector<Statement*>::iterator it = mStatementArray.begin(); it != mStatementArray.end(); ++it)
+	{
+	    Statement *temp = *it;
+	    bool x = temp->compareName(theName);
+	    if(x)
+	        ret = true;
+	    break;
+	}
+    return ret;
+    
+}
+
+
+
+
+
+
+

@@ -21,7 +21,7 @@ public:
 	Token* mType;
 	std::vector<Statement*> mStatementArray;
 	std::vector<Arguement*> mArgArray;
-	bool compare(std::string theName);
+	bool compareName(std::string theName);
 	std::string print();
 };
 
@@ -33,6 +33,6 @@ public:
 	std::string mName;
 	Token* mValue, *mType;
 
-	bool compare(std::string theName);
+	bool compareName(std::string theName);
 	std::string print();
 };
