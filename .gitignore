@@ -3,9 +3,9 @@
 *.app
 *.o
 *.dSYM
-
+.idea/
 builds/
-
+cmake-build-debug/
 # Windows thumbnail cache files
 Thumbs.db
 ehthumbs.db
