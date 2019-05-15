@@ -18,9 +18,10 @@ Lexer::Lexer()
 	keywordMap.insert(make_pair("print", kToken_PRINT));
 
 	operatorMap.insert(make_pair("=", kToken_EQUALS));
+	operatorMap.insert(make_pair("(", kToken_LPAREN));
+	operatorMap.insert(make_pair(")", kToken_RPAREN));
 
 }
-
 Lexer::~Lexer()
 {
 	delete myScanner;
@@ -48,7 +49,8 @@ Lexer::isIdentifierChar(string i_char, bool begin)
 	}
 	return (theChar >= 'a' && theChar <= 'z') ||
 	 	   (theChar >= 'A' && theChar <= 'Z') ||
-	 	   (theChar >= '0' && theChar <= '9');
+	 	   (theChar >= '0' && theChar <= '9') ||
+	 	   (theChar == '_');
 }
 
 bool

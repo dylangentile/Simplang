@@ -6,17 +6,20 @@
 class Parser {
 public:
 	Parser();
-	~Parser();
-	void init(std::string fileName, bool fVerbose = true);
+	~Parser() = default;
+	void init(const std::string &fileName, bool fVerbose = true);
 	void parse();
 
 public:
 
 private:
-    void fetchToken();
-    void lookahead(unsigned x);
-    void doParseOnFunc(FuncStatement *theFunc);
+    void fetchToken(unsigned t = 1);
+    Token* tokenLookahead(unsigned x);
+    void doParseOnFunc(FuncStatement *theFunc, std::vector<std::string> theNames);
+
+    bool doesNameNotExist(std::vector<std::string> &nameArray, const std::string &what);
 private:
+    //unsigned whereAmI;
     std::vector<Token*>::iterator currentTokenIterator;
     Token *currentToken;
 	bool mVerbose;

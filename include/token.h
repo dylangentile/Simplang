@@ -35,7 +35,9 @@ typedef enum
 	kToken_POINTER,
 	kToken_BOOL,
 	kToken_PRINT,
-	kToken_EQUALS
+	kToken_EQUALS,
+	kToken_LPAREN,
+	kToken_RPAREN
 
 } TokenID;
 

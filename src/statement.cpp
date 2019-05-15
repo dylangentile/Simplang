@@ -2,15 +2,9 @@
 
 using namespace std;
 
-
-Statement::Statement()
+VarStatement::VarStatement()
 {
-
-}
-
-Statement::~Statement()
-{
-
+    mValue = nullptr;
 }
 
 
@@ -21,28 +15,21 @@ VarStatement::print()
 }
 
 bool
-VarStatement::compareName(string theName)
+VarStatement::compareName(const string &theName)
 {
 	if (mName == theName)
 		return true;
 	return false;
 }
 
-FuncStatement::FuncStatement()
-{
 
-}
 
-FuncStatement::~FuncStatement()
-{
-
-}
 
 string
 FuncStatement::print()
 {
 	string msg = "\nFunction: " + mType->cargo + " " + mName + "(";
-	for (vector<Arguement*>::iterator it = mArgArray.begin(); it != mArgArray.end(); it++)
+	for (auto it = mArgArray.begin(); it != mArgArray.end(); it++)
 	{
 		Arguement* theArg = *it;
 		msg += theArg->mType->cargo + " " + theArg->mIdentifier->cargo;
@@ -54,7 +41,7 @@ FuncStatement::print()
 	}
 	msg += "):\n";
 	
-	for(vector<Statement*>::iterator it = mStatementArray.begin(); it != mStatementArray.end(); ++it)
+	for(auto it = mStatementArray.begin(); it != mStatementArray.end(); ++it)
 	{
 	    Statement *temp = *it;
 	    msg += temp->print();
@@ -64,10 +51,10 @@ FuncStatement::print()
 }
 
 bool
-FuncStatement::compareName(string theName)
+FuncStatement::compareName(const string &theName)
 {
     bool ret = false;
-    for(vector<Statement*>::iterator it = mStatementArray.begin(); it != mStatementArray.end(); ++it)
+    for(auto it = mStatementArray.begin(); it != mStatementArray.end(); ++it)
 	{
 	    Statement *temp = *it;
 	    bool x = temp->compareName(theName);
@@ -78,10 +65,3 @@ FuncStatement::compareName(string theName)
     return ret;
     
 }
-
-
-
-
-
-
-
