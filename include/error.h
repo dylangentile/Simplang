@@ -14,5 +14,5 @@ public:
 };
 
 
-void error(unsigned id = 666, std::string theMsg = "NULL", Token *mToken = nullptr, bool stop = false);
+void error(unsigned id = 666, std::string theMsg = "NULL", bool stop = false, Token* mToken = nullptr);
 std::string errorOut();

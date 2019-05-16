@@ -38,7 +38,8 @@ typedef enum
 	kToken_EQUALS,
 	kToken_LPAREN,
 	kToken_VOID,
-	kToken_RPAREN
+	kToken_RPAREN,
+	kToken_NULL
 
 } TokenID;
 
@@ -47,10 +48,11 @@ typedef struct{
 	std::string *sourceText;
 	int *lineIndex, *colIndex, *strIndex; 
 	std::vector<Character*> cObjArray;
-	TokenID type;
+	TokenID type, subType;
 	TokenCAT cat;
 	void charPass(Character *x)
 	{
+		subType = kToken_NULL;
 		lineIndex = &(x->lineIndex);
 		colIndex = &(x->columnIndex);
 		strIndex = &(x->sourceIndex);
@@ -65,6 +67,25 @@ typedef struct{
 		cargo += x->cargo;
 		cObjArray.push_back(x);
 	}
+
+	void fixTypes()
+	{
+		if (type == kToken_NUMBER && subType == kToken_NULL)
+		{
+			subType = kToken_NUMBER32;//default number prescision
+		}
+		else if (type == kToken_NUMBER8 ||
+			type == kToken_NUMBER16 ||
+			type == kToken_NUMBER32 ||
+			type == kToken_NUMBER64 ||
+			type == kToken_NUMBER128 ||
+			type == kToken_NUMBER_FP)
+		{
+			subType = type;
+			type = kToken_NUMBER;
+		}
+	}
+
 } Token;
 
 

@@ -10,10 +10,8 @@ int main(int argc, char const *argv[])
 {
 	cout << "\n";
 	if(argc <= 1)
-	{
-	    cout << "poop!";
-		error(0, "No input file!");
-	}
+		error(0, "No input file!", true);
+	
 
     string theFile = argv[1];
 	Parser *myParser = new Parser(theFile, true);

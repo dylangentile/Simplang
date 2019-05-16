@@ -20,11 +20,10 @@ Parser::fetchToken(unsigned t)
     if(!itAtEnd)
     {
         currentTokenIterator += t;
-        if(currentTokenIterator >= tokenArray->end())
-         {
-            itAtEnd = true;
-        }
-        currentToken = *currentTokenIterator;
+        if(currentTokenIterator == tokenArray->end())
+			itAtEnd = true;
+		else
+			currentToken = *currentTokenIterator;
     }
     else
     {
@@ -40,7 +39,7 @@ Parser::tokenLookahead(unsigned x)
 {
     if(currentTokenIterator + x == tokenArray->end())
     {
-        //TODO: error
+		error(5, "Reached EOF before end of statement", true, currentToken);
     }
     return *(currentTokenIterator + x);
 }
@@ -99,12 +98,12 @@ Parser::multipleVarInitializations(FuncStatement *theFunc, vector<string> theNam
 
                                 //todo: this could definitely be turned into a function...
                                 unsigned i = 1;
-                                while(tokenLookahead(i)->type!=kToken_SEMICOLON ||
+                                while(tokenLookahead(i)->type!=kToken_SEMICOLON &&
                                         tokenLookahead(i)->type!=kToken_COMMA)
                                 {
                                     if(tokenLookahead(i)->type==kToken_EOF)
                                     {
-                                        //todo: error
+										error(5, "Reached EOF before the end of commaed initializations.", true, tokenLookahead(i));
                                     }
                                     ++i;
                                 }
@@ -123,8 +122,8 @@ Parser::multipleVarInitializations(FuncStatement *theFunc, vector<string> theNam
                             }
                             else
                             {
-                                //todo: this...
-                            }
+								error(5, "Type at: " + to_string(*typePtr->lineIndex + 1) + ":" + to_string(*typePtr->colIndex + 1) + ", doesnt match type of value of '^0^' at ^1^:^2^", false, tokenLookahead(1));
+                            } 
 
                         }
                         else
@@ -148,7 +147,7 @@ Parser::multipleVarInitializations(FuncStatement *theFunc, vector<string> theNam
                 }
                 else
                 {
-                    //todo: var already exists error
+					error(6, "Identifier '^0^' at ^1^:^2^ has already been used!", false, currentToken);
                 }
             }
             else if(currentToken->type == kToken_COMMA)
@@ -157,7 +156,6 @@ Parser::multipleVarInitializations(FuncStatement *theFunc, vector<string> theNam
             }
             else if(currentToken->type == kToken_SEMICOLON)
             {
-                fetchToken();
                 break;
             }
             else
@@ -209,16 +207,17 @@ Parser::doParseOnFunc(FuncStatement *theFunc, vector<string> theNames)
                                     currentToken); //todo: update, but this requires fully implemented expression obj
                             theVar->mValue = theStatement;
                             theFunc->mStatementArray.push_back(theVar);
-                            fetchToken(3);
+                            fetchToken();
                         }
                         else
                         {
-                            //TODO: this error
+							error(6, "Identifier '^0^' at ^1^:^2^ has already been used!", false, tokenLookahead(1));
                         }
                     }
                     else
                     {
-                        //TODO: this error
+						error(6, "Type at: " + to_string(*currentToken->lineIndex + 1) + ":" + to_string(*currentToken->colIndex + 1) + ", doesnt match type of value of '^0^' at ^1^:^2^", false, tokenLookahead(3));
+
                     }
                 }
                 else if(tokenLookahead(4)->type == kToken_COMMA)
@@ -251,6 +250,7 @@ Parser::doParseOnFunc(FuncStatement *theFunc, vector<string> theNames)
                 //TODO: WEIRD ELSE CASE
             }
         }
+		fetchToken();
     }
 }
 

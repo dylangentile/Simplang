@@ -79,6 +79,7 @@ Lexer::isType(string i_char, TokenID &theId, int &mIt)
 	unordered_map<string, TokenID>::iterator it = typeMap.find(i_char);
 	if(it == typeMap.end())
 		return false;
+	//todo: rewrite this for better
 	theId = it->second;
 	return true;
 
@@ -180,6 +181,7 @@ Lexer::fetchTokenPtr()
 	{
 		theToken->type = kToken_COMMA;
 		theToken->cat = kCat_NULL;
+		return theToken;
 	}
 	{
 		int laAmount = 0;
@@ -191,6 +193,7 @@ Lexer::fetchTokenPtr()
 				theToken->addChar(c1Char);
 			}
 			theToken->cat = kCat_TYPE;
+			theToken->fixTypes();
 			return theToken;
 		}
 	}
@@ -246,8 +249,14 @@ Lexer::fetchTokenPtr()
 				getCharPackage();
 			}
 		}
+		if (fp)
+		{
+			theToken->addChar(c1Char);
+			//getCharPackage();
+		}
 		theToken->type = fp ? kToken_NUMBER_FP : kToken_NUMBER;
 		theToken->cat = kCat_VALUE;
+		theToken->fixTypes();
 		return theToken;
 	}
 
@@ -257,7 +266,7 @@ Lexer::fetchTokenPtr()
 		while(c1 != "\"")
 		{
 			if(c1 == "\0")
-				error(5, "String ^0^ opened at ^1^:^2^ doesn't close before end of file");
+				error(5, "String ^0^ opened at ^1^:^2^ doesn't close before end of file", false, theToken);
 			theToken->addChar(c1Char);
 			getCharPackage();
 		}
@@ -304,7 +313,7 @@ Lexer::lex()
 		}
 		if(theToken->type == kToken_UNKNOWN)
 		{
-			error(1, "Unknown Character at ^1^:^2^ == ^0^", theToken);
+			error(1, "Unknown Character at ^1^:^2^ == ^0^", false,  theToken);
 		}
 		theV->push_back(theToken);
 	}

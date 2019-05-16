@@ -31,10 +31,10 @@ vector<ErrorData*> vError;
 */
 
 void
-error(unsigned id, string theMsg, Token *mToken, bool stop)
+error(unsigned id, string theMsg, bool stop, Token* mToken)
 {
 
-    totalCount++;
+   totalCount++;
    ErrorData* theOne = nullptr;
    if(mToken == nullptr)
    {
@@ -59,6 +59,7 @@ error(unsigned id, string theMsg, Token *mToken, bool stop)
    if(theOne == nullptr)
    {
        theOne = new ErrorData(*(mToken->sourceName));
+	   vError.push_back(theOne);
    }
    ++(theOne->errorCount);
    string repMsg = "";
@@ -86,7 +87,7 @@ error(unsigned id, string theMsg, Token *mToken, bool stop)
            }
            string tNum = "";
            ++it;
-           for(unsigned i = 0; i < t; i++)
+           for(unsigned i = 0; i < t - 1; i++)
            {
                tNum.push_back(*it);
                ++it;
@@ -102,16 +103,22 @@ error(unsigned id, string theMsg, Token *mToken, bool stop)
            {
            case 0: z += mToken->cargo;
                break;
-           case 1: z += to_string(*(mToken->lineIndex));
+           case 1: z += to_string(*(mToken->lineIndex) + 1);
                break;
-           case 2: z += to_string(*(mToken->colIndex));
+           case 2: z += to_string(*(mToken->colIndex) + 1);
                break;
+
            }
-           z.push_back(*it);
+          
 
 
        }
-       repMsg += z;
+	  
+       repMsg += z; 
+	   if (it != theMsg.end())
+		   repMsg.push_back(*it);
+	   else
+		   break;
    }
 
    switch(id)
@@ -120,6 +127,10 @@ error(unsigned id, string theMsg, Token *mToken, bool stop)
        break;
    case 1:
        break;
+   case 5: repMsg = *(mToken->sourceName) + ":" + to_string(*(mToken->lineIndex) + 1) + ":" + to_string(*(mToken->colIndex) + 1) + "-->" + theMsg;
+	   break;
+   case 6: repMsg = *(mToken->sourceName) + ":" + to_string(*(mToken->lineIndex) + 1) + ":" + to_string(*(mToken->colIndex) + 1) + "-->" + repMsg;
+	   break;
    default: repMsg = "Simplang compiler exited with default error:\n\t" + repMsg;
    }
 
@@ -127,8 +138,10 @@ error(unsigned id, string theMsg, Token *mToken, bool stop)
    theOne->msg += "\n\n" + repMsg;
    if(stop)
    {
-       cout << errorOut();
-       exit(1);
+	   cout << errorOut();
+	   {
+		   exit(1);
+	   }
    }
 }
 
@@ -145,5 +158,5 @@ errorOut()
 	    finalMsg += (*it)->msg;
     }
 
-	return finalMsg + "\nSimplang exited with " + to_string(totalCount) + " errors.";
+	return finalMsg + "\n\nSimplang exited with " + to_string(totalCount) + " errors.";
 }
