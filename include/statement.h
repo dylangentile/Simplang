@@ -25,13 +25,29 @@ public:
 	std::string print() override;
 };
 
+
+class ExpressionStatement : public Statement
+{
+public:
+    ExpressionStatement() = default;
+    ~ExpressionStatement() = default;
+    std::vector<Token*> mTokenArray;
+    //todo: properly implement
+    bool compareName(const std::string &theName) override;
+    std::string print() override;
+
+
+};
+
 class VarStatement : public Statement
 {
 public:
 	VarStatement();
 	~VarStatement() = default;
 	std::string mName;
-	Token* mValue, *mType;
+	Token* mType;
+	ExpressionStatement* mValue;
+
 
 	bool compareName(const std::string &theName) override;
 	std::string print() override;

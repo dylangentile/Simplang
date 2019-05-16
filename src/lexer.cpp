@@ -14,8 +14,10 @@ Lexer::Lexer()
 	typeMap.insert(make_pair("bool", kToken_BOOL));
 	typeMap.insert(make_pair("string", kToken_STRING));
 	typeMap.insert(make_pair("ptr", kToken_POINTER));
-	
-	keywordMap.insert(make_pair("print", kToken_PRINT));
+    typeMap.insert(make_pair("void", kToken_VOID));
+
+
+    keywordMap.insert(make_pair("print", kToken_PRINT));
 
 	operatorMap.insert(make_pair("=", kToken_EQUALS));
 	operatorMap.insert(make_pair("(", kToken_LPAREN));

@@ -3,6 +3,7 @@ This is a programming language compiler(interpreter for now) that I'm writing.
 
 .sl files are simplang files
 
+### Types:
 
 Basic Types:
 
@@ -23,3 +24,6 @@ Notes:
 
 https://en.wikipedia.org/wiki/Operator-precedence_parser
 https://llvm.org/docs/tutorial/index.html
+
+### Formatting:
+All formating should be in the GNU C format. Emphasis on <i>should</i>. I'm a little bit of a hypocrite so hopefull most of my code follows it. Please don't submit pull requests to fix it. I'll worry about that later.

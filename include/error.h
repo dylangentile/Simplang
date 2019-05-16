@@ -4,12 +4,15 @@
 
 class ErrorData{
 public:
-	ErrorData();
+	ErrorData(std::string file, bool doColors = true);
 	~ErrorData();
 	std::string msg;
+	std::string srcFile;
 	unsigned errorCount;
+	bool color;
+
 };
 
 
-void error(unsigned id = 666, std::string theMsg = "NULL", Token *mToken = nullptr);
+void error(unsigned id = 666, std::string theMsg = "NULL", Token *mToken = nullptr, bool stop = false);
 std::string errorOut();

@@ -8,19 +8,20 @@ VarStatement::VarStatement()
 }
 
 
+
+
 string
 VarStatement::print()
 {
-	return mType->cargo + ": " + mName + "=" + mValue->cargo + "\n";
+	return mType->cargo + ": " + mName + "=" + mValue->mTokenArray.front()->cargo + "\n";
 }
 
 bool
 VarStatement::compareName(const string &theName)
 {
-	if (mName == theName)
-		return true;
-	return false;
+    return mName == theName;
 }
+
 
 
 
@@ -65,3 +66,29 @@ FuncStatement::compareName(const string &theName)
     return ret;
     
 }
+
+bool
+ExpressionStatement::compareName(const std::string &theName)
+{
+    return false;
+}
+
+string
+ExpressionStatement::print()
+{
+    return "";
+    //todo: implement
+;}
+
+
+
+
+
+
+
+
+
+
+
+
+

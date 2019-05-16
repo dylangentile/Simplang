@@ -1,8 +1,7 @@
 #include <iostream>
 #include <vector>
 #include "error.h"
-#include "lexer.h"
-#include "token.h"
+#include "parser.h"
 
 using namespace std;
 
@@ -10,16 +9,16 @@ using namespace std;
 int main(int argc, char const *argv[])
 {
 	cout << "\n";
-	if(argc == 1)
+	if(argc <= 1)
 	{
+	    cout << "poop!";
 		error(0, "No input file!");
 	}
-	
+
     string theFile = argv[1];
-    Lexer *myLexer = new Lexer;
-    myLexer->init(theFile);
-    vector<Token*>* out = myLexer->lex();
-	cout << "\n\n" << printTokenArray(out) << "\n\n";
+	Parser *myParser = new Parser(theFile, true);
+	myParser->parse();
+    cout << "\n\n"<< myParser->mLog << "\n\n";
 
 	cout << errorOut() << "\n";
 	return 0;
