@@ -10,15 +10,25 @@ public:
 	//void init(const std::string &fileName, bool fVerbose = true);
 	void parse();
     //std::string print();
-public:
+
+
+ public:
     std::string mLog;
+
+
+
+
 private:
     void fetchToken(unsigned t = 1);
     Token* tokenLookahead(unsigned x);
     void doParseOnFunc(FuncStatement *theFunc, std::vector<std::string> theNames);
     void multipleVarInitializations(FuncStatement *theFunc, std::vector<std::string> theNames);
     ExpressionStatement* parseExpression(std::vector<Token*>::iterator start, std::vector<std::string> theNames, std::vector<Token*>::iterator *stop = nullptr);
+    ExpressionStatement* parseBinExpression(std::vector<Token*>::iterator start, std::vector<std::string> theNames, std::vector<Token*>::iterator *stop = nullptr);
     bool doesNameNotExist(std::vector<std::string> &nameArray, const std::string &what);
+
+
+
 private:
     //unsigned whereAmI;
     std::vector<Token*>::iterator currentTokenIterator;

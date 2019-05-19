@@ -13,7 +13,7 @@ VarStatement::VarStatement()
 string
 VarStatement::print()
 {
-	return mType->cargo + ": " + mName + "=" + mValue->mTokenArray.front()->cargo + "\n";
+	return "";//mType->cargo + ": " + mName + "=" + mValue->mTokenArray.front()->cargo + "\n";
 }
 
 bool

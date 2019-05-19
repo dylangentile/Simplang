@@ -19,6 +19,7 @@ typedef enum
 
 typedef enum 
 {
+    kToken_COMMENT,
     kToken_IDENTIFIER,
 	kToken_EOF,
 	kToken_UNKNOWN,
@@ -39,6 +40,11 @@ typedef enum
 	kToken_LPAREN,
 	kToken_VOID,
 	kToken_RPAREN,
+	kToken_ADD,
+	kToken_SUBTRACT,
+	kToken_MULTIPLY,
+	kToken_DIVIDE,
+	kToken_MODULO,
 	kToken_NULL
 
 } TokenID;

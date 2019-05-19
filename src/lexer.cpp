@@ -23,6 +23,17 @@ Lexer::Lexer()
 	operatorMap.insert(make_pair("(", kToken_LPAREN));
 	operatorMap.insert(make_pair(")", kToken_RPAREN));
 
+	operatorMap.insert(make_pair("+", kToken_ADD));
+    operatorMap.insert(make_pair("-", kToken_SUBTRACT));
+    operatorMap.insert(make_pair("*", kToken_MULTIPLY));
+    operatorMap.insert(make_pair("/", kToken_DIVIDE));
+    operatorMap.insert(make_pair("%", kToken_MODULO));
+
+
+
+
+
+
 }
 Lexer::~Lexer()
 {
@@ -153,11 +164,16 @@ Lexer::fetchTokenPtr()
 		}
 		while(c2 == "//")
 		{
-			while(c1 != "\n")
+
+			while(c1 != "\n" && c1 != "\0")
 			{
 				getCharPackage();
+				commentBegin->addChar(c1Char);
 			}
 		}
+        commentBegin->type = c1 == "\0" ? kToken_EOF : kToken_COMMENT;
+		if(c1 == "\0")
+		    return commentBegin;
 	}
 
 	Token *theToken = new Token;
@@ -315,7 +331,10 @@ Lexer::lex()
 		{
 			error(1, "Unknown Character at ^1^:^2^ == ^0^", false,  theToken);
 		}
-		theV->push_back(theToken);
+		if(theToken->type != kToken_COMMENT)
+        {
+            theV->push_back(theToken);
+        }
 	}
 }
 

@@ -2,6 +2,32 @@
 #include "token.h"
 #include <string>
 #include <vector>
+#include <stack>
+
+
+/*
+class Term
+{
+public:
+    Term() = 0;
+    virtual ~Term() = 0;
+    virtual std::string print() = 0;
+
+};
+
+class BinTerm : public Term
+{
+public:
+    BinTerm();
+    ~BinTerm();
+    std::string print();
+
+
+
+};
+*/
+
+
 
 class Statement
 {
@@ -30,14 +56,31 @@ class ExpressionStatement : public Statement
 {
 public:
     ExpressionStatement() = default;
-    ~ExpressionStatement() = default;
-    std::vector<Token*> mTokenArray;
-    //todo: properly implement
+    virtual ~ExpressionStatement() = default;
+    std::stack<Token*> mTokenArray;
     bool compareName(const std::string &theName) override;
     std::string print() override;
 
 
 };
+
+
+
+class BinExpressionStatement : public ExpressionStatement
+{
+public:
+    BinExpressionStatement() = default;
+    ~BinExpressionStatement() = default;
+  //  std::stack<Term*> mTermStack;
+   // bool compareName(const std::string &theName) override;
+    //std::string print() override;
+
+
+};
+
+
+
+
 
 class VarStatement : public Statement
 {

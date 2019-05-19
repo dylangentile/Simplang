@@ -1,4 +1,5 @@
 #include "parser.h"
+#include <stack>
 using namespace std;
 
 Parser::Parser(const string &fileName, bool fVerbose)
@@ -55,11 +56,24 @@ Parser::doesNameNotExist(vector<string> &nameArray, const string &what)
 ExpressionStatement*
 Parser::parseExpression(vector<Token*>::iterator start, vector<string> theNames, vector<Token*>::iterator *stop)
 {
+    //Stack<Token>
     ExpressionStatement* theStatement = new ExpressionStatement;
-    theStatement->mTokenArray.push_back(*start);
-    return theStatement;
-    //todo: implement this...
-    /*
+
+
+    Token *lookAhead = tokenLookahead(1);
+
+    if (lookAhead->cat == kCat_OPERATOR)
+    {
+
+        parseBinExpression(start, theNames, stop);
+
+
+    }
+
+
+
+
+
     if(stop != nullptr)
     {
         vector<Token*>::iterator theEnd = *stop;
@@ -69,8 +83,75 @@ Parser::parseExpression(vector<Token*>::iterator start, vector<string> theNames,
     {
 
     }
-     */
+
+
+
+    return nullptr;
+
 }
+
+#include <iostream>
+
+ExpressionStatement*
+Parser::parseBinExpression(vector<Token*>::iterator start, vector<string> theNames, vector<Token*>::iterator *stop)
+{
+
+
+    cout << "parseBinExpression" << endl;
+
+    Token *idToken1 = currentToken;
+    Token *opToken = tokenLookahead(1);
+    Token *idToken2 = tokenLookahead(2);
+    if (opToken->type == kToken_ADD)
+    {
+
+        fetchToken();
+        //Token * opToken =  currentToken;
+
+        //verify that this is a valid token for the add operator
+        Token *nextIDToken = tokenLookahead(1);
+
+
+        Token *nextToken = tokenLookahead(2);
+        //todo: is this case necessary?
+        if (nextToken->cat == kCat_OPERATOR && nextToken->type == kToken_MULTIPLY)
+        {
+            fetchToken();
+            parseBinExpression(start, theNames, stop);
+
+
+            cout << idToken1->cargo << " + " ;
+//            printf("%s %s *", idToken1->cargo.c_str(), idToken2->cargo.c_str());
+
+
+        }
+        else
+        {
+            cout << idToken1->cargo << " " << idToken2->cargo << " + ";
+//            printf("%s %s +\n", idToken1->cargo.c_str(), idToken2->cargo.c_str());
+
+        }
+
+
+
+    }
+    else if (opToken->type == kToken_MULTIPLY)
+    {
+
+  //      printf("%s %s *", idToken1->cargo.c_str(), idToken2->cargo.c_str());
+        cout << idToken1->cargo << " " << idToken2->cargo << " * ";
+
+    }
+
+
+
+    cout << endl;
+
+
+    return nullptr;
+
+}
+
 
 
 void
@@ -90,7 +171,7 @@ Parser::multipleVarInitializations(FuncStatement *theFunc, vector<string> theNam
 
                     if(tokenLookahead(1)->type == kToken_EQUALS)
                     {
-                        if(tokenLookahead(2)->cat == kCat_VALUE)
+                        if(tokenLookahead(2)->cat == kCat_VALUE /*|| tokenLookahead(2)->cat == kCat_IDENTIFIER*/)
                         {
                             if(tokenLookahead(2)->type == typePtr->type)
                             {
@@ -111,7 +192,8 @@ Parser::multipleVarInitializations(FuncStatement *theFunc, vector<string> theNam
                                 *eEnd = currentTokenIterator
                                         +(i-1); //i-1 removes the unecessary semicolon/comma at the end.
                                 ExpressionStatement* theValue;
-                                theValue = parseExpression(currentTokenIterator+2, theNames, eEnd);
+                                fetchToken(2); //todo:  remove me
+                                theValue = parseExpression(currentTokenIterator, theNames, eEnd);
                                 theNames.push_back(currentToken->cargo);
                                 VarStatement* theVar = new VarStatement;
                                 theVar->mType = typePtr;
@@ -203,8 +285,8 @@ Parser::doParseOnFunc(FuncStatement *theFunc, vector<string> theNames)
                             theVar->mName = currentToken->cargo;
                             fetchToken(2);
                             ExpressionStatement* theStatement = new ExpressionStatement;
-                            theStatement->mTokenArray.push_back(
-                                    currentToken); //todo: update, but this requires fully implemented expression obj
+                            //theStatement->mTokenArray.push_back(
+                              //      currentToken); //todo: update, but this requires fully implemented expression obj
                             theVar->mValue = theStatement;
                             theFunc->mStatementArray.push_back(theVar);
                             fetchToken();
