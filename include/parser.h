@@ -2,6 +2,7 @@
 #include "statement.h"
 #include "lexer.h"
 #include "error.h"
+#include <map>
 
 class Parser {
 public:
@@ -24,7 +25,7 @@ private:
     void doParseOnFunc(FuncStatement *theFunc, std::vector<std::string> theNames);
     void multipleVarInitializations(FuncStatement *theFunc, std::vector<std::string> theNames);
     ExpressionStatement* parseExpression(std::vector<Token*>::iterator start, std::vector<std::string> theNames, std::vector<Token*>::iterator *stop = nullptr);
-    ExpressionStatement* parseBinExpression(std::vector<Token*>::iterator start, std::vector<std::string> theNames, std::vector<Token*>::iterator *stop = nullptr);
+    ExpressionStatement* parseBinExpression(std::vector<std::string> theNames, bool *empty);
     bool doesNameNotExist(std::vector<std::string> &nameArray, const std::string &what);
 
 
@@ -37,6 +38,7 @@ private:
 	bool itAtEnd;
 	Lexer* myLexer;
 	std::vector<Token*>* tokenArray;
+	std::map<TokenID, unsigned int> precedenceMap;
 
 
 };
