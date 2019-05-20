@@ -76,7 +76,7 @@ Parser::parseExpression(vector<Token*>::iterator start, vector<string> theNames,
     {
         bool *isEmpty = new bool;
         *isEmpty = true;
-        parseBinExpression(theNames, isEmpty);
+        parseBinExpression(theNames, isEmpty, nullptr);
         cout << endl;
 
 
@@ -115,272 +115,92 @@ Parser::getPrecedence(Token* x)
 }
 
 ExpressionStatement*
-Parser::parseBinExpression(vector<string> theNames, bool *empty)
+Parser::parseBinExpression(vector<string> theNames, bool *empty, Token* prevOp)
 {
 
 
-    //cout << "parseBinExpression" << endl;
-    //while(true == false)
-
-    unsigned int prevOpP = 0;
     while(true)
     {
-
         Token* idToken = currentToken;
         Token* opToken = tokenLookahead(1);
         if(opToken->type == kToken_SEMICOLON)
-        {
             break;
-        }
         Token* nextIdToken = tokenLookahead(2);
         Token* nextOpToken = tokenLookahead(3);
 
-        //todo: add add'l casings
+
         if(nextOpToken->type == kToken_SEMICOLON)
         {
-            if(prevOpP > getPrecedence(opToken) || prevOpP == getPrecedence(opToken))
+            if(prevOp == nullptr || getPrecedence(prevOp) < getPrecedence(opToken))
             {
-                cout << nextIdToken->cargo << " " << opToken->cargo << endl;
+                cout << " " << idToken->cargo << " " << nextIdToken->cargo << " " << opToken->cargo;
             }
             else
             {
-                cout << " " << idToken->cargo << " " << nextIdToken->cargo << " " << opToken->cargo << endl;
+                cout << " " << nextIdToken->cargo << " " << opToken->cargo;
             }
+            fetchToken(2);
             break;
         }
 
 
-        if(getPrecedence(opToken) < getPrecedence(nextOpToken))
+        if(prevOp == nullptr)
         {
-            fetchToken(2);
-            if(*empty)
+
+            if(getPrecedence(nextOpToken) > getPrecedence(opToken))
             {
-                *empty = false;
-                cout << idToken->cargo << endl;
-            }
-            parseBinExpression(theNames, empty);
-            cout << " " << opToken->cargo << endl;
-            fetchToken(2);
-        }
-        else
-        {
-            if(*empty)
-            {
-                *empty = false;
-                cout << idToken->cargo << " " << nextIdToken->cargo << " " << opToken->cargo << endl;
+                cout << " " << idToken->cargo;
+                fetchToken(2);
+                parseBinExpression(theNames, empty, opToken);
+                cout << " " << opToken->cargo;
             }
             else
             {
-                if(getPrecedence(opToken) > getPrecedence(nextOpToken) || getPrecedence(opToken) > 10)
-                {
-                    cout << " " << nextIdToken->cargo << " " << idToken->cargo << " " << opToken->cargo << endl;
-                }
-                else if(prevOpP <= 10)
-                {
-                    cout <<  " " << idToken->cargo << " " << opToken->cargo << endl;
-                }
-                else
-                {
-                    cout << " " << nextIdToken->cargo  << " " << opToken->cargo << endl;
-                }
-
-            }
-            fetchToken(2);
-        }
-
-        if(tokenLookahead(1)->type == kToken_SEMICOLON)
-        {
-            //if()
-           // cout << idToken->cargo << nextIdToken->cargo << " " << opToken->cargo;
-            break;
-        }
-
-        prevOpP = getPrecedence(opToken);
-
-
-
-
-
-
-
-    }
-
-
-            /*
-
-            Token* idToken1 = currentToken;
-            Token* opToken = tokenLookahead(1);
-            Token* idToken2 = tokenLookahead(2);
-            Token *opTokenNext;
-
-
-            opIterator = precedenceMap.find(opToken->type);
-            if(opIterator != precedenceMap.end())
-                opPrecendence = opIterator->second;
-            else
-            {
-                //todo: error
+                cout << " " << idToken->cargo << " " << nextIdToken->cargo << " " << opToken->cargo;
+                fetchToken(2);
             }
 
-
-
-            opTokenNext = tokenLookahead(3);
-            if(opTokenNext->type == kToken_SEMICOLON || opTokenNext->type == kToken_COMMA)
-            {
-                cout << " " << idToken2->cargo << " " << opToken->cargo << endl;
-                break;
-            }
-
-
-            if (opTokenNext->cat == kCat_OPERATOR)
-            {
-                opIterator = precedenceMap.find(opTokenNext->type);
-                if(opIterator != precedenceMap.end())
-                    opPrecendenceNext = opIterator->second;
-                else
-                {
-                    //todo
-                }
-
-                if (opPrecendenceNext > opPrecendence)
-                {
-
-
-
-
-                    fetchToken(2);
-
-
-                    cout << " " << idToken1->cargo <<endl;
-
-
-                    parseBinExpression(theNames, empty);
-
-
-                    cout << opToken->cargo <<endl;
-
-
-
-
-                    if(tokenLookahead(3)->type == kToken_SEMICOLON || tokenLookahead(3)->type == kToken_COMMA)
-                    {
-                        break;
-                    }
-                }
-                else
-                {
-                    fetchToken(2);
-
-
-                    if (*empty == false)
-                    {
-
-                        cout << " " << idToken2->cargo << " " << opToken->cargo << endl;
-                    }
-                    else
-                    {
-                        *empty = false;
-                        cout << idToken1->cargo << " " << idToken2->cargo << " " << opToken->cargo << endl;
-                    }
-                }
-            }
-             *.
-
-
-        }
-
-
-
-
-
-        /*
-
-
-        fetchToken(2);
-
-        Token* nextOp = tokenLookahead(1);
-
-        unsigned int op1P = opPrecedence->second;
-
-        opPrecedence = precedenceMap.find(nextOp->type);
-
-        if(opPrecedence == precedenceMap.end())
-        {
-            //todo: error
-        }
-
-        unsigned int op2P = opPrecedence->second;
-
-        if(op1P < op2P)
-        {
-            parseBinExpression(theNames, empty);
-            cout << " " << idToken1->cargo << " " << opToken->cargo;
         }
         else
         {
-            if(*empty)
-                cout << idToken1->cargo;
-            *empty = false;
-            cout << " " << idToken2->cargo << " " << opToken->cargo;
-        }
-        if(currentToken->type == kToken_SEMICOLON || currentToken->type == kToken_COMMA)
-        {
-            cout << " " << idToken2->cargo << " " << opToken->cargo;
-            return nullptr;
-        }
-
-        if(tokenLookahead(1)->cat == kCat_OPERATOR)
-        {
-            auto pr = precedenceMap.find(tokenLookahead(1)->type);
-            if(pr->second == op1P)
+            if(getPrecedence(nextOpToken) > getPrecedence(opToken))
             {
-                parseBinExpression(theNames, empty);
+
+                if(getPrecedence(prevOp) < getPrecedence(opToken))
+                {
+                    cout << " " << idToken->cargo;
+                }
+               fetchToken(2);
+               parseBinExpression(theNames, empty, opToken);
+               cout << " " << opToken->cargo;
+
+
+            }
+            else
+            {
+                if(getPrecedence(prevOp) == getPrecedence(opToken))
+                {
+                    cout << " " << nextIdToken->cargo << " " << opToken->cargo;
+                }
+                else if(getPrecedence(prevOp) < getPrecedence(opToken))
+                {
+                    cout << " " << idToken->cargo << " " << nextIdToken->cargo << " " << opToken->cargo;
+                }
+                else
+                {
+                    cout << " " << nextIdToken->cargo << " " << opToken->cargo;
+                }
+                fetchToken(2);
             }
 
         }
 
-      //  cout << endl;
+
+        prevOp = opToken;
 
 
-    Token* idToken1 = currentToken;
-    Token* opToken1 = tokenLookahead(1);
-    Token* idToken2 = tokenLookahead(2);
-    Token* opToken2 = tokenLookahead(3);
-
-    auto sit = precedenceMap.find(opToken1->type);
-    auto bit = precedenceMap.find(opToken2->type);
-    unsigned int *p1 = new unsigned int, *p2 = new unsigned int;
-    *p1 = sit->second;
-    *p2 = bit->second;
-
-    if(opToken2->type == kToken_SEMICOLON)
-    {
-        cout << idToken1->cargo << " " << opToken1->cargo << idToken2->cargo;
-    }
-
-    while(*p1 > *p2)
-    {
 
     }
-     */
-
-
-
-
-
-    /*
-    else if (opToken->type == kToken_MULTIPLY)
-    {
-
-  //      printf("%s %s *", idToken1->cargo.c_str(), idToken2->cargo.c_str());
-        cout << idToken1->cargo << " " << idToken2->cargo << " * ";
-
-    }
-     */
-
-
-
-
 
 
     return nullptr;
