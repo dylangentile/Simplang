@@ -26,6 +26,7 @@ private:
     void multipleVarInitializations(FuncStatement *theFunc, std::vector<std::string> theNames);
     ExpressionStatement* parseExpression(std::vector<Token*>::iterator start, std::vector<std::string> theNames, std::vector<Token*>::iterator *stop = nullptr);
     ExpressionStatement* parseBinExpression(std::vector<std::string> theNames, bool *empty);
+    unsigned int getPrecedence(Token* x);
     bool doesNameNotExist(std::vector<std::string> &nameArray, const std::string &what);
 
 

@@ -77,6 +77,7 @@ Parser::parseExpression(vector<Token*>::iterator start, vector<string> theNames,
         bool *isEmpty = new bool;
         *isEmpty = true;
         parseBinExpression(theNames, isEmpty);
+        cout << endl;
 
 
     }
@@ -102,6 +103,17 @@ Parser::parseExpression(vector<Token*>::iterator start, vector<string> theNames,
 }
 
 
+unsigned int
+Parser::getPrecedence(Token* x)
+{
+    auto it = precedenceMap.find(x->type);
+    if(it == precedenceMap.end())
+    {
+        //todo error -- passed a tokenid without a precedence
+    }
+    return it->second;
+}
+
 ExpressionStatement*
 Parser::parseBinExpression(vector<string> theNames, bool *empty)
 {
@@ -109,14 +121,92 @@ Parser::parseBinExpression(vector<string> theNames, bool *empty)
 
     //cout << "parseBinExpression" << endl;
     //while(true == false)
+
+    unsigned int prevOpP = 0;
+    while(true)
     {
-        unsigned int opPrecendence = 0, opPrecendenceNext = 0;
 
-        map<TokenID, unsigned int>::iterator opIterator;
-
-
-        while(true)
+        Token* idToken = currentToken;
+        Token* opToken = tokenLookahead(1);
+        if(opToken->type == kToken_SEMICOLON)
         {
+            break;
+        }
+        Token* nextIdToken = tokenLookahead(2);
+        Token* nextOpToken = tokenLookahead(3);
+
+        //todo: add add'l casings
+        if(nextOpToken->type == kToken_SEMICOLON)
+        {
+            if(prevOpP > getPrecedence(opToken) || prevOpP == getPrecedence(opToken))
+            {
+                cout << nextIdToken->cargo << " " << opToken->cargo << endl;
+            }
+            else
+            {
+                cout << " " << idToken->cargo << " " << nextIdToken->cargo << " " << opToken->cargo << endl;
+            }
+            break;
+        }
+
+
+        if(getPrecedence(opToken) < getPrecedence(nextOpToken))
+        {
+            fetchToken(2);
+            if(*empty)
+            {
+                *empty = false;
+                cout << idToken->cargo << endl;
+            }
+            parseBinExpression(theNames, empty);
+            cout << " " << opToken->cargo << endl;
+            fetchToken(2);
+        }
+        else
+        {
+            if(*empty)
+            {
+                *empty = false;
+                cout << idToken->cargo << " " << nextIdToken->cargo << " " << opToken->cargo << endl;
+            }
+            else
+            {
+                if(getPrecedence(opToken) > getPrecedence(nextOpToken) || getPrecedence(opToken) > 10)
+                {
+                    cout << " " << nextIdToken->cargo << " " << idToken->cargo << " " << opToken->cargo << endl;
+                }
+                else if(prevOpP <= 10)
+                {
+                    cout <<  " " << idToken->cargo << " " << opToken->cargo << endl;
+                }
+                else
+                {
+                    cout << " " << nextIdToken->cargo  << " " << opToken->cargo << endl;
+                }
+
+            }
+            fetchToken(2);
+        }
+
+        if(tokenLookahead(1)->type == kToken_SEMICOLON)
+        {
+            //if()
+           // cout << idToken->cargo << nextIdToken->cargo << " " << opToken->cargo;
+            break;
+        }
+
+        prevOpP = getPrecedence(opToken);
+
+
+
+
+
+
+
+    }
+
+
+            /*
 
             Token* idToken1 = currentToken;
             Token* opToken = tokenLookahead(1);
@@ -137,7 +227,7 @@ Parser::parseBinExpression(vector<string> theNames, bool *empty)
             opTokenNext = tokenLookahead(3);
             if(opTokenNext->type == kToken_SEMICOLON || opTokenNext->type == kToken_COMMA)
             {
-                cout << " " << idToken2->cargo << " " << opToken->cargo;
+                cout << " " << idToken2->cargo << " " << opToken->cargo << endl;
                 break;
             }
 
@@ -154,9 +244,24 @@ Parser::parseBinExpression(vector<string> theNames, bool *empty)
 
                 if (opPrecendenceNext > opPrecendence)
                 {
+
+
+
+
                     fetchToken(2);
+
+
+                    cout << " " << idToken1->cargo <<endl;
+
+
                     parseBinExpression(theNames, empty);
-                    cout << " " << idToken1->cargo << " " << opToken->cargo;
+
+
+                    cout << opToken->cargo <<endl;
+
+
+
+
                     if(tokenLookahead(3)->type == kToken_SEMICOLON || tokenLookahead(3)->type == kToken_COMMA)
                     {
                         break;
@@ -170,15 +275,16 @@ Parser::parseBinExpression(vector<string> theNames, bool *empty)
                     if (*empty == false)
                     {
 
-                        cout << " " << idToken2->cargo << " " << opToken->cargo;
+                        cout << " " << idToken2->cargo << " " << opToken->cargo << endl;
                     }
                     else
                     {
                         *empty = false;
-                        cout << idToken1->cargo << " " << idToken2->cargo << " " << opToken->cargo;
+                        cout << idToken1->cargo << " " << idToken2->cargo << " " << opToken->cargo << endl;
                     }
                 }
             }
+             *.
 
 
         }
@@ -231,11 +337,11 @@ Parser::parseBinExpression(vector<string> theNames, bool *empty)
                 parseBinExpression(theNames, empty);
             }
 
-        }*/
+        }
 
-        cout << endl;
-    }
-    /*
+      //  cout << endl;
+
+
     Token* idToken1 = currentToken;
     Token* opToken1 = tokenLookahead(1);
     Token* idToken2 = tokenLookahead(2);
