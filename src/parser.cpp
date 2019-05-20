@@ -74,12 +74,9 @@ Parser::parseExpression(vector<Token*>::iterator start, vector<string> theNames,
 
     if (lookAhead->cat == kCat_OPERATOR)
     {
-        bool *isEmpty = new bool;
-        *isEmpty = true;
-        parseBinExpression(theNames, isEmpty, nullptr);
-        cout << endl;
-
-
+        BinExpressionStatement* theTerms;
+        theTerms = parseBinExpression(theNames, nullptr);
+        fetchToken(); //go past last value to non operator char.
     }
 
 
@@ -114,30 +111,52 @@ Parser::getPrecedence(Token* x)
     return it->second;
 }
 
-ExpressionStatement*
-Parser::parseBinExpression(vector<string> theNames, bool *empty, Token* prevOp)
+BinExpressionStatement*
+Parser::parseBinExpression(vector<string> theNames, Token* prevOp, BinExpressionStatement *theTerms)
 {
-
+    
+    
+    if(theTerms == nullptr)
+    {
+        theTerms = new BinExpressionStatement;
+    }
 
     while(true)
     {
         Token* idToken = currentToken;
         Token* opToken = tokenLookahead(1);
-        if(opToken->type == kToken_SEMICOLON)
+        if(opToken->cat != kCat_OPERATOR)
             break;
         Token* nextIdToken = tokenLookahead(2);
         Token* nextOpToken = tokenLookahead(3);
 
 
-        if(nextOpToken->type == kToken_SEMICOLON)
+        if(nextOpToken->cat != kCat_OPERATOR)
         {
             if(prevOp == nullptr || getPrecedence(prevOp) < getPrecedence(opToken))
             {
-                cout << " " << idToken->cargo << " " << nextIdToken->cargo << " " << opToken->cargo;
+                ValueStatement *nextId = new ValueStatement,*theId = new ValueStatement;
+                theId->mValue = idToken;
+                nextId->mValue = nextIdToken;
+                OperatorStatement *theOp = new OperatorStatement;
+                theOp->insertOp(opToken);
+                
+                theTerms->mTermVector.push_back(theId);
+                theTerms->mTermVector.push_back(nextId);
+                theTerms->mTermVector.push_back(theOp);
+                
+                //cout << " " << idToken->cargo << " " << nextIdToken->cargo << " " << opToken->cargo;
             }
             else
             {
-                cout << " " << nextIdToken->cargo << " " << opToken->cargo;
+                ValueStatement *nextId = new ValueStatement;
+                nextId->mValue = nextIdToken;
+                OperatorStatement *theOp = new OperatorStatement;
+                theOp->insertOp(opToken);
+                
+                theTerms->mTermVector.push_back(nextId);
+                theTerms->mTermVector.push_back(theOp);
+                //cout << " " << nextIdToken->cargo << " " << opToken->cargo;
             }
             fetchToken(2);
             break;
@@ -149,14 +168,29 @@ Parser::parseBinExpression(vector<string> theNames, bool *empty, Token* prevOp)
 
             if(getPrecedence(nextOpToken) > getPrecedence(opToken))
             {
-                cout << " " << idToken->cargo;
+                ValueStatement *theId = new ValueStatement;
+                theId->mValue = idToken;
+                theTerms->mTermVector.push_back(nextId);
+                //cout << " " << idToken->cargo;
                 fetchToken(2);
-                parseBinExpression(theNames, empty, opToken);
-                cout << " " << opToken->cargo;
+                parseBinExpression(theNames, opToken, theTerms);
+                OperatorStatement* theOp = new OperatorStatement;
+                theOp->insertOp(opToken);
+                //cout << " " << opToken->cargo;
             }
             else
             {
-                cout << " " << idToken->cargo << " " << nextIdToken->cargo << " " << opToken->cargo;
+                ValueStatement *nextId = new ValueStatement,*theId = new ValueStatement;
+                theId->mValue = idToken;
+                nextId->mValue = nextIdToken;
+                OperatorStatement *theOp = new OperatorStatement;
+                theOp->insertOp(opToken);
+                
+                theTerms->mTermVector.push_back(theId);
+                theTerms->mTermVector.push_back(nextId);
+                theTerms->mTermVector.push_back(theOp);
+                
+                //cout << " " << idToken->cargo << " " << nextIdToken->cargo << " " << opToken->cargo;
                 fetchToken(2);
             }
 
@@ -168,11 +202,17 @@ Parser::parseBinExpression(vector<string> theNames, bool *empty, Token* prevOp)
 
                 if(getPrecedence(prevOp) < getPrecedence(opToken))
                 {
-                    cout << " " << idToken->cargo;
+                    ValueStatment *theId = new ValueStatement;
+                    theId->mValue = idToken;
+                    theTerms->mTermVector.push_back(theId);
+                    //cout << " " << idToken->cargo;
                 }
                fetchToken(2);
-               parseBinExpression(theNames, empty, opToken);
-               cout << " " << opToken->cargo;
+               
+               parseBinExpression(theNames, opToken, theTerms);
+               OperatorStatement *theOp = new OperatorStatement;
+               theOp->insertOp(opToken);
+               theTerms->mTermVector.push_back(theOp);
 
 
             }
@@ -180,15 +220,37 @@ Parser::parseBinExpression(vector<string> theNames, bool *empty, Token* prevOp)
             {
                 if(getPrecedence(prevOp) == getPrecedence(opToken))
                 {
-                    cout << " " << nextIdToken->cargo << " " << opToken->cargo;
+                    ValueStatement *nextId = new ValueStatement;
+                    nextId->mValue = nextIdToken;
+                    OperatorStatement *theOp = new OperatorStatement;
+                    theOp->insertOp(opToken);
+                    
+                    theTerms->mTermVector.push_back(nextId);
+                    theTerms->mTermVector.push_back(theOp);
+                    //cout << " " << nextIdToken->cargo << " " << opToken->cargo;
                 }
                 else if(getPrecedence(prevOp) < getPrecedence(opToken))
                 {
-                    cout << " " << idToken->cargo << " " << nextIdToken->cargo << " " << opToken->cargo;
+                    ValueStatement *nextId = new ValueStatement,*theId = new ValueStatement;
+                    theId->mValue = idToken;
+                    nextId->mValue = nextIdToken;
+                    OperatorStatement *theOp = new OperatorStatement;
+                    theOp->insertOp(opToken);
+                
+                    theTerms->mTermVector.push_back(theId);
+                    theTerms->mTermVector.push_back(nextId);
+                    theTerms->mTermVector.push_back(theOp);
+                    //cout << " " << idToken->cargo << " " << nextIdToken->cargo << " " << opToken->cargo;
                 }
                 else
                 {
-                    cout << " " << nextIdToken->cargo << " " << opToken->cargo;
+                    ValueStatement *nextId = new ValueStatement;
+                    nextId->mValue = nextIdToken;
+                    OperatorStatement* theOp = new OperatorStatement;
+                    theOp->insertOp(opToken);
+                    theTerms->mTermVector.push_back(nextId);
+                    theTerms->mTermVector.push_back(theOp);
+                    //cout << " " << nextIdToken->cargo << " " << opToken->cargo;
                 }
                 fetchToken(2);
             }
@@ -203,7 +265,7 @@ Parser::parseBinExpression(vector<string> theNames, bool *empty, Token* prevOp)
     }
 
 
-    return nullptr;
+    return theTerms;
 
 }
 
@@ -230,33 +292,16 @@ Parser::multipleVarInitializations(FuncStatement *theFunc, vector<string> theNam
                         {
                             if(tokenLookahead(2)->type == typePtr->type)
                             {
-
-
-                                //todo: this could definitely be turned into a function...
-                                unsigned i = 1;
-                                while(tokenLookahead(i)->type!=kToken_SEMICOLON &&
-                                        tokenLookahead(i)->type!=kToken_COMMA)
-                                {
-                                    if(tokenLookahead(i)->type==kToken_EOF)
-                                    {
-										error(5, "Reached EOF before the end of commaed initializations.", true, tokenLookahead(i));
-                                    }
-                                    ++i;
-                                }
-                                vector<Token*>::iterator* eEnd = new vector<Token*>::iterator;
-                                *eEnd = currentTokenIterator
-                                        +(i-1); //i-1 removes the unecessary semicolon/comma at the end.
+                                Token *theID = currenToken;
                                 ExpressionStatement* theValue;
-                                fetchToken(2); //todo:  remove me
+                                fetchToken(2);
                                 theValue = parseExpression(currentTokenIterator, theNames, eEnd);
-                                cout << endl;
-                                theNames.push_back(currentToken->cargo);
+                                theNames.push_back(theID->cargo);
                                 VarStatement* theVar = new VarStatement;
                                 theVar->mType = typePtr;
-                                theVar->mName = currentToken->cargo;
+                                theVar->mName = theID->cargo;
                                 theVar->mValue = theValue;
                                 theFunc->mStatementArray.push_back(theVar);
-                                fetchToken(i);
                             }
                             else
                             {

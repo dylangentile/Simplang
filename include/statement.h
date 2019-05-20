@@ -91,8 +91,8 @@ class ExpressionStatement : public Statement
 public:
     ExpressionStatement() = default;
     virtual ~ExpressionStatement() = default;
-    std::stack<Token*> mTokenArray;
-    bool compareName(const std::string &theName) override;
+    std::stack<Statement*> mTermVector;
+    bool compareName(const std::string &theName) {return false;}
     std::string print() override;
 
 
