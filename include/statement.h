@@ -5,27 +5,20 @@
 #include <stack>
 
 
+//template <typename T>
 /*
 class Term
 {
 public:
-    Term() = 0;
-    virtual ~Term() = 0;
-    virtual std::string print() = 0;
-
-};
-
-class BinTerm : public Term
-{
-public:
-    BinTerm();
-    ~BinTerm();
+    Term();
+    ~Term();
     std::string print();
-
-
 
 };
 */
+
+
+
 
 
 
@@ -52,6 +45,47 @@ public:
 };
 
 
+class FuncCallStatement : public Statement 
+{
+public:
+	FuncCallStatement() = default;
+	~FuncCallStatement() = default;
+	bool compareName(const std::string& theName) { return false; }
+	std::string print() override;
+	std::vector<Statement*> mArgArray;
+	FuncStatement* whoAmICalling;
+
+
+
+};
+
+
+class ValueStatement : public Statement
+{
+public:
+	ValueStatement() = default;
+	~ValueStatement() = default;
+	Token* mValue;
+	bool compareName(const std::string& theName) { return false; }
+	std::string print() override;
+
+};
+
+class OperatorStatement : public Statement
+{
+public:
+	OperatorStatement() = default;
+	~OperatorStatement() = default;
+	bool compareName(const std::string& theName) { return false; }
+	std::string print() override;
+	void insertOp(Token* x);
+protected:
+	TokenID mValue;
+	Token* ogToken;
+};
+
+
+
 class ExpressionStatement : public Statement
 {
 public:
@@ -71,14 +105,16 @@ class BinExpressionStatement : public ExpressionStatement
 public:
     BinExpressionStatement() = default;
     ~BinExpressionStatement() = default;
+	std::vector<Statement*> mTermVector;
+	bool compareName(const std::string& theName) { return false; }
+	std::string print() override;
+
   //  std::stack<Term*> mTermStack;
    // bool compareName(const std::string &theName) override;
     //std::string print() override;
 
 
 };
-
-
 
 
 

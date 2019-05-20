@@ -78,7 +78,57 @@ ExpressionStatement::print()
 {
     return "";
     //todo: implement
-;}
+}
+
+string 
+BinExpressionStatement::print()
+{
+	string msg = "";
+	//todo: format
+	for(auto it = mTermVector.begin(); it != mTermVector.end(); ++it)
+	{
+		msg += (*it)->print();
+	}
+	return msg;
+}
+
+string
+FuncCallStatement::print()
+{
+	string msg = "";
+	msg += whoAmICalling->mName + "(";
+	for (auto it = mArgArray.begin(); it != mArgArray.end(); ++it)
+	{
+		msg += (*it)->print() + ", ";
+	}
+	msg += ")";
+	return msg;
+}
+
+
+string
+ValueStatement::print()
+{
+	return mValue->cargo;
+}
+
+string
+OperatorStatement::print()
+{
+	return ogToken->cargo;
+}
+
+void
+OperatorStatement::insertOp(Token* x)
+{
+	if (x->cat != kCat_OPERATOR)
+	{
+		//todo: error
+	}
+
+	mValue = x->type;
+	ogToken = x;
+}
 
 
 
