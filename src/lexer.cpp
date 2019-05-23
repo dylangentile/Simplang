@@ -28,6 +28,7 @@ Lexer::Lexer()
     operatorMap.insert(make_pair("*", kToken_MULTIPLY));
     operatorMap.insert(make_pair("/", kToken_DIVIDE));
     operatorMap.insert(make_pair("%", kToken_MODULO));
+    operatorMap.insert(make_pair("^", kToken_POWER));
 
 
 

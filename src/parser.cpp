@@ -1,5 +1,4 @@
 #include "parser.h"
-#include <stack>
 using namespace std;
 
 Parser::Parser(const string &fileName, bool fVerbose)
@@ -14,10 +13,13 @@ Parser::Parser(const string &fileName, bool fVerbose)
 	currentToken = *currentTokenIterator;
 	mLog = "";
 
+	precedenceMap.insert(make_pair(kToken_POWER, 30));
     precedenceMap.insert(make_pair(kToken_MULTIPLY, 20));
     precedenceMap.insert(make_pair(kToken_DIVIDE, 20));
     precedenceMap.insert(make_pair(kToken_ADD, 10));
-    precedenceMap.insert(make_pair(kToken_MULTIPLY, 10));
+    precedenceMap.insert(make_pair(kToken_SUBTRACT, 10));
+    precedenceMap.insert(make_pair(kToken_MODULO, 5)); //is this okay?
+
 
 
 
@@ -64,7 +66,7 @@ Parser::doesNameNotExist(vector<string> &nameArray, const string &what)
 #include <iostream>
 
 ExpressionStatement*
-Parser::parseExpression(vector<Token*>::iterator start, vector<string> theNames, vector<Token*>::iterator *stop)
+Parser::parseExpression(vector<string> theNames)
 {
     //Stack<Token>
     ExpressionStatement* theStatement = new ExpressionStatement;
@@ -72,30 +74,18 @@ Parser::parseExpression(vector<Token*>::iterator start, vector<string> theNames,
 
     Token *lookAhead = tokenLookahead(1);
 
-    if (lookAhead->cat == kCat_OPERATOR)
+    if (lookAhead->cat == kCat_OPERATOR || currentToken->type == kToken_LPAREN)
     {
-        BinExpressionStatement* theTerms;
+        BinExpressionStatement* theTerms = nullptr;
         theTerms = parseBinExpression(theNames, nullptr);
         fetchToken(); //go past last value to non operator char.
-    }
-
-
-
-
-
-    if(stop != nullptr)
-    {
-        vector<Token*>::iterator theEnd = *stop;
-
-    }
-    else
-    {
+        return dynamic_cast<ExpressionStatement*>(theTerms);
 
     }
 
 
 
-    return nullptr;
+
 
 }
 
@@ -123,15 +113,46 @@ Parser::parseBinExpression(vector<string> theNames, Token* prevOp, BinExpression
 
     while(true)
     {
+        bool idP = true;
         Token* idToken = currentToken;
+        if(idToken->type == kToken_LPAREN)
+        {
+            fetchToken();
+            continue;
+        }
+
+        if(idToken->type == kToken_RPAREN)
+        {
+            idP = false;
+        }
+
         Token* opToken = tokenLookahead(1);
         if(opToken->cat != kCat_OPERATOR)
             break;
+        else if(opToken->type == kToken_RPAREN)
+        {
+            fetchToken();
+            break;
+        }
         Token* nextIdToken = tokenLookahead(2);
         Token* nextOpToken = tokenLookahead(3);
 
+        if(nextIdToken->type == kToken_LPAREN)
+        {
+            OperatorStatement *theOp = new OperatorStatement;
+            theOp->insertOp(opToken);
+            ValueStatement *theId = new ValueStatement;
+            theId->mValue = idToken;
+            if(idP)
+                theTerms->mTermVector.push_back(theId);
+            fetchToken(2);
+            parseBinExpression(theNames, nullptr, theTerms);
+            theTerms->mTermVector.push_back(theOp);
+            prevOp = opToken;
+            continue;
+        }
 
-        if(nextOpToken->cat != kCat_OPERATOR)
+        if(nextOpToken->cat != kCat_OPERATOR || nextOpToken->type == kToken_RPAREN)
         {
             if(prevOp == nullptr || getPrecedence(prevOp) < getPrecedence(opToken))
             {
@@ -140,8 +161,8 @@ Parser::parseBinExpression(vector<string> theNames, Token* prevOp, BinExpression
                 nextId->mValue = nextIdToken;
                 OperatorStatement *theOp = new OperatorStatement;
                 theOp->insertOp(opToken);
-                
-                theTerms->mTermVector.push_back(theId);
+                if(idP)
+                    theTerms->mTermVector.push_back(theId);
                 theTerms->mTermVector.push_back(nextId);
                 theTerms->mTermVector.push_back(theOp);
                 
@@ -158,10 +179,16 @@ Parser::parseBinExpression(vector<string> theNames, Token* prevOp, BinExpression
                 theTerms->mTermVector.push_back(theOp);
                 //cout << " " << nextIdToken->cargo << " " << opToken->cargo;
             }
-            fetchToken(2);
+            if(nextOpToken->type == kToken_RPAREN)
+            {
+                fetchToken(3);
+                continue;
+            }
+            else
+                fetchToken(2);
+
             break;
         }
-
 
         if(prevOp == nullptr)
         {
@@ -170,7 +197,8 @@ Parser::parseBinExpression(vector<string> theNames, Token* prevOp, BinExpression
             {
                 ValueStatement *theId = new ValueStatement;
                 theId->mValue = idToken;
-                theTerms->mTermVector.push_back(nextId);
+                if(idP)
+                    theTerms->mTermVector.push_back(theId);
                 //cout << " " << idToken->cargo;
                 fetchToken(2);
                 parseBinExpression(theNames, opToken, theTerms);
@@ -185,8 +213,8 @@ Parser::parseBinExpression(vector<string> theNames, Token* prevOp, BinExpression
                 nextId->mValue = nextIdToken;
                 OperatorStatement *theOp = new OperatorStatement;
                 theOp->insertOp(opToken);
-                
-                theTerms->mTermVector.push_back(theId);
+                if(idP)
+                    theTerms->mTermVector.push_back(theId);
                 theTerms->mTermVector.push_back(nextId);
                 theTerms->mTermVector.push_back(theOp);
                 
@@ -202,9 +230,10 @@ Parser::parseBinExpression(vector<string> theNames, Token* prevOp, BinExpression
 
                 if(getPrecedence(prevOp) < getPrecedence(opToken))
                 {
-                    ValueStatment *theId = new ValueStatement;
+                    ValueStatement *theId = new ValueStatement;
                     theId->mValue = idToken;
-                    theTerms->mTermVector.push_back(theId);
+                    if(idP)
+                        theTerms->mTermVector.push_back(theId);
                     //cout << " " << idToken->cargo;
                 }
                fetchToken(2);
@@ -236,8 +265,8 @@ Parser::parseBinExpression(vector<string> theNames, Token* prevOp, BinExpression
                     nextId->mValue = nextIdToken;
                     OperatorStatement *theOp = new OperatorStatement;
                     theOp->insertOp(opToken);
-                
-                    theTerms->mTermVector.push_back(theId);
+                    if(idP)
+                        theTerms->mTermVector.push_back(theId);
                     theTerms->mTermVector.push_back(nextId);
                     theTerms->mTermVector.push_back(theOp);
                     //cout << " " << idToken->cargo << " " << nextIdToken->cargo << " " << opToken->cargo;
@@ -288,14 +317,14 @@ Parser::multipleVarInitializations(FuncStatement *theFunc, vector<string> theNam
 
                     if(tokenLookahead(1)->type == kToken_EQUALS)
                     {
-                        if(tokenLookahead(2)->cat == kCat_VALUE /*|| tokenLookahead(2)->cat == kCat_IDENTIFIER*/)
+                        if(tokenLookahead(2)->cat == kCat_VALUE || tokenLookahead(2)->cat == kCat_IDENTIFIER || tokenLookahead(2)->type == kToken_LPAREN)
                         {
-                            if(tokenLookahead(2)->type == typePtr->type)
+                            if(tokenLookahead(2)->type == kToken_LPAREN || tokenLookahead(2)->type == typePtr->type)
                             {
-                                Token *theID = currenToken;
+                                Token *theID = currentToken;
                                 ExpressionStatement* theValue;
                                 fetchToken(2);
-                                theValue = parseExpression(currentTokenIterator, theNames, eEnd);
+                                theValue = parseExpression(theNames);
                                 theNames.push_back(theID->cargo);
                                 VarStatement* theVar = new VarStatement;
                                 theVar->mType = typePtr;
@@ -320,6 +349,7 @@ Parser::multipleVarInitializations(FuncStatement *theFunc, vector<string> theNam
                         VarStatement* theVar = new VarStatement;
                         theVar->mName = currentToken->cargo;
                         theVar->mType = typePtr;
+                        theVar->mValue = nullptr;
                         theFunc->mStatementArray.push_back(theVar);
                         fetchToken();
                     }
@@ -418,6 +448,7 @@ Parser::doParseOnFunc(FuncStatement *theFunc, vector<string> theNames)
                 theVar->mType = currentToken;
                 fetchToken();
                 theVar->mName = currentToken->cargo;
+                theVar->mValue = nullptr;
                 theFunc->mStatementArray.push_back(theVar);
             }
             else if(tokenLookahead(2)->type == kToken_COMMA)

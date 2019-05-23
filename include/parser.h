@@ -24,7 +24,7 @@ private:
     Token* tokenLookahead(unsigned x);
     void doParseOnFunc(FuncStatement *theFunc, std::vector<std::string> theNames);
     void multipleVarInitializations(FuncStatement *theFunc, std::vector<std::string> theNames);
-    ExpressionStatement* parseExpression(std::vector<Token*>::iterator start, std::vector<std::string> theNames, std::vector<Token*>::iterator *stop = nullptr);
+    ExpressionStatement* parseExpression(std::vector<std::string> theNames);
     BinExpressionStatement* parseBinExpression(std::vector<std::string> theNames, Token* prevOp, BinExpressionStatement *theTerms = nullptr);
     unsigned int getPrecedence(Token* x);
     bool doesNameNotExist(std::vector<std::string> &nameArray, const std::string &what);

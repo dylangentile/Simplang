@@ -45,6 +45,7 @@ typedef enum
 	kToken_MULTIPLY,
 	kToken_DIVIDE,
 	kToken_MODULO,
+	kToken_POWER,
 	kToken_NULL
 
 } TokenID;

@@ -13,7 +13,16 @@ VarStatement::VarStatement()
 string
 VarStatement::print()
 {
-	return "";//mType->cargo + ": " + mName + "=" + mValue->mTokenArray.front()->cargo + "\n";
+    string msg = mType->cargo + ": " + mName + "= ";
+
+    if(mValue != nullptr)
+    {
+        msg += mValue->print();
+    }
+    else
+        msg += "uninitialized";
+
+    return msg + "\n";
 }
 
 bool
@@ -67,29 +76,35 @@ FuncStatement::compareName(const string &theName)
     
 }
 
-bool
+/*bool
 ExpressionStatement::compareName(const std::string &theName)
 {
     return false;
-}
+}*/
 
 string
 ExpressionStatement::print()
 {
-    return "";
-    //todo: implement
+    string msg = "";
+    //todo: format
+    for(auto it = mTermVector.begin(); it != mTermVector.end(); ++it)
+    {
+        msg += (*it)->print() + " ";
+    }
+    return msg;
 }
 
-string 
+
+string
 BinExpressionStatement::print()
 {
-	string msg = "";
-	//todo: format
-	for(auto it = mTermVector.begin(); it != mTermVector.end(); ++it)
-	{
-		msg += (*it)->print();
-	}
-	return msg;
+    string msg = "";
+    //todo: format
+    for(auto it = mTermVector.begin(); it != mTermVector.end(); ++it)
+    {
+        msg += (*it)->print() + " ";
+    }
+    return msg;
 }
 
 string
@@ -129,6 +144,7 @@ OperatorStatement::insertOp(Token* x)
 	mValue = x->type;
 	ogToken = x;
 }
+
 
 
 

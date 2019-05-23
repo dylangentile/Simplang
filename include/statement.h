@@ -91,9 +91,9 @@ class ExpressionStatement : public Statement
 public:
     ExpressionStatement() = default;
     virtual ~ExpressionStatement() = default;
-    std::stack<Statement*> mTermVector;
+    std::vector<Statement*> mTermVector;
     bool compareName(const std::string &theName) {return false;}
-    std::string print() override;
+    std::string print();
 
 
 };
@@ -107,9 +107,9 @@ public:
     ~BinExpressionStatement() = default;
 	std::vector<Statement*> mTermVector;
 	bool compareName(const std::string& theName) { return false; }
-	std::string print() override;
+    std::string print();
 
-  //  std::stack<Term*> mTermStack;
+    //  std::stack<Term*> mTermStack;
    // bool compareName(const std::string &theName) override;
     //std::string print() override;
 
