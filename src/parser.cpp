@@ -56,17 +56,25 @@ Parser::tokenLookahead(unsigned x)
     return *(currentTokenIterator + x);
 }
 
-bool
-Parser::doesNameNotExist(vector<string> &nameArray, const string &what)
+Identifier*
+Parser::doesNameNotExist(vector<Identifier*> &nameArray, Token *what)
 {
-    auto finder = find(nameArray.begin(), nameArray.end(), what);
-    return finder == nameArray.end();
+    vector<Identifier*> v = nameArray;
+    for(vector<Identifier*>::iterator it = v.begin(); it != v.end(); ++it)
+    {
+        if((*it)->mName->cargo == what->cargo)
+        {
+            Identifier *n = *it;
+            return n;
+        }
+    }
+    return nullptr;
 }
 
-#include <iostream>
+//#include <iostream>
 
 ExpressionStatement*
-Parser::parseExpression(vector<string> theNames)
+Parser::parseExpression(vector<Identifier*> theNames, TokenID type)
 {
     //Stack<Token>
     ExpressionStatement* theStatement = new ExpressionStatement;
@@ -77,7 +85,7 @@ Parser::parseExpression(vector<string> theNames)
     if (lookAhead->cat == kCat_OPERATOR || currentToken->type == kToken_LPAREN)
     {
         BinExpressionStatement* theTerms = nullptr;
-        theTerms = parseBinExpression(theNames, nullptr);
+        theTerms = parseBinExpression(theNames, type, nullptr);
         fetchToken(); //go past last value to non operator char.
         return dynamic_cast<ExpressionStatement*>(theTerms);
 
@@ -96,13 +104,13 @@ Parser::getPrecedence(Token* x)
     auto it = precedenceMap.find(x->type);
     if(it == precedenceMap.end())
     {
-        //todo error -- passed a tokenid without a precedence
+        error(6, "Passed non-operator character '^0^' into expression statement", true, x);
     }
     return it->second;
 }
 
 BinExpressionStatement*
-Parser::parseBinExpression(vector<string> theNames, Token* prevOp, BinExpressionStatement *theTerms)
+Parser::parseBinExpression(vector<Identifier*> theNames, TokenID type, Token* prevOp, BinExpressionStatement *theTerms)
 {
     
     
@@ -125,6 +133,33 @@ Parser::parseBinExpression(vector<string> theNames, Token* prevOp, BinExpression
         {
             idP = false;
         }
+        if(idToken->cat == kCat_IDENTIFIER)
+        {
+            Identifier *memOf = nullptr;
+            memOf = doesNameNotExist(theNames, idToken);
+            if(memOf == nullptr)
+                error(6, "Non existent identifier: '^0^'", true, idToken);
+            else
+            {
+
+                if(memOf->mFunc != nullptr)
+                {
+                    //if void function... check type
+                    //todo: parse arguements
+                }
+                else if(memOf->mValue == nullptr)
+                {
+                    warning(6, "Uninitialized identifier: '^0^' being passed into expression!", idToken);
+                }
+
+                if(memOf->mType != type)
+                {
+                    //todo: should i be this harsh? or should I let it keep going???? Maybe just have some default castings in the interpreter/compiler w/ a warning instead?
+                    error(6, "Unmatching types between identifier '^0^' and the type of the expression's assignment!",
+                            true, idToken);
+                }
+            }
+        }
 
         Token* opToken = tokenLookahead(1);
         if(opToken->cat != kCat_OPERATOR)
@@ -135,6 +170,37 @@ Parser::parseBinExpression(vector<string> theNames, Token* prevOp, BinExpression
             break;
         }
         Token* nextIdToken = tokenLookahead(2);
+        if(nextIdToken->cat == kCat_IDENTIFIER)
+        {
+            Identifier *memOf = nullptr;
+            memOf = doesNameNotExist(theNames, nextIdToken);
+            if(memOf == nullptr)
+                error(6, "Non existent identifier: '^0^'", true, nextIdToken);
+            else
+            {
+
+                if(memOf->mFunc != nullptr)
+                {
+                    //if void function... check type
+                    //todo: parse arguements
+                }
+                else if(memOf->mValue == nullptr)
+                {
+                    warning(6, "Uninitialized identifier: '^0^' being passed into expression!", nextIdToken);
+                }
+
+                if(memOf->mType != type)
+                {
+                    //todo: should i be this harsh? or should I let it keep going???? Maybe just have some default castings in the interpreter/compiler w/ a warning instead?
+                    error(6, "Unmatching types between identifier '^0^' and the type of the expression's assignment!",
+                            true, nextIdToken);
+                }
+            }
+
+
+
+
+        }
         Token* nextOpToken = tokenLookahead(3);
 
         if(nextIdToken->type == kToken_LPAREN)
@@ -146,7 +212,7 @@ Parser::parseBinExpression(vector<string> theNames, Token* prevOp, BinExpression
             if(idP)
                 theTerms->mTermVector.push_back(theId);
             fetchToken(2);
-            parseBinExpression(theNames, nullptr, theTerms);
+            parseBinExpression(theNames, type, nullptr, theTerms);
             theTerms->mTermVector.push_back(theOp);
             prevOp = opToken;
             continue;
@@ -201,7 +267,7 @@ Parser::parseBinExpression(vector<string> theNames, Token* prevOp, BinExpression
                     theTerms->mTermVector.push_back(theId);
                 //cout << " " << idToken->cargo;
                 fetchToken(2);
-                parseBinExpression(theNames, opToken, theTerms);
+                parseBinExpression(theNames, type, opToken, theTerms);
                 OperatorStatement* theOp = new OperatorStatement;
                 theOp->insertOp(opToken);
                 //cout << " " << opToken->cargo;
@@ -238,7 +304,7 @@ Parser::parseBinExpression(vector<string> theNames, Token* prevOp, BinExpression
                 }
                fetchToken(2);
                
-               parseBinExpression(theNames, opToken, theTerms);
+               parseBinExpression(theNames, type, opToken, theTerms);
                OperatorStatement *theOp = new OperatorStatement;
                theOp->insertOp(opToken);
                theTerms->mTermVector.push_back(theOp);
@@ -301,7 +367,7 @@ Parser::parseBinExpression(vector<string> theNames, Token* prevOp, BinExpression
 
 
 void
-Parser::multipleVarInitializations(FuncStatement *theFunc, vector<string> theNames)
+Parser::multipleVarInitializations(FuncStatement *theFunc, vector<Identifier*> &theNames)
 {
     //todo: are these ifs arbitrary?
     Token* typePtr = currentToken;
@@ -312,30 +378,34 @@ Parser::multipleVarInitializations(FuncStatement *theFunc, vector<string> theNam
         {
             if(currentToken->cat == kCat_IDENTIFIER)
             {
-                if(doesNameNotExist(theNames, currentToken->cargo))
+                if(doesNameNotExist(theNames, currentToken) == nullptr)
                 {
 
                     if(tokenLookahead(1)->type == kToken_EQUALS)
                     {
                         if(tokenLookahead(2)->cat == kCat_VALUE || tokenLookahead(2)->cat == kCat_IDENTIFIER || tokenLookahead(2)->type == kToken_LPAREN)
                         {
-                            if(tokenLookahead(2)->type == kToken_LPAREN || tokenLookahead(2)->type == typePtr->type)
+                            //if(tokenLookahead(2)->type == kToken_LPAREN || tokenLookahead(2)->type == typePtr->type)
                             {
                                 Token *theID = currentToken;
                                 ExpressionStatement* theValue;
                                 fetchToken(2);
-                                theValue = parseExpression(theNames);
-                                theNames.push_back(theID->cargo);
+                                theValue = parseExpression(theNames, typePtr->type);
                                 VarStatement* theVar = new VarStatement;
                                 theVar->mType = typePtr;
                                 theVar->mName = theID->cargo;
                                 theVar->mValue = theValue;
                                 theFunc->mStatementArray.push_back(theVar);
+                                Identifier *myId = new Identifier;
+                                myId->mValue = theValue;
+                                myId->mName = theID;
+                                myId->mType = typePtr->type;
+                                theNames.push_back(myId);
                             }
-                            else
+                            /*else
                             {
-								error(5, "Type at: " + to_string(*typePtr->lineIndex + 1) + ":" + to_string(*typePtr->colIndex + 1) + ", doesnt match type of value of '^0^' at ^1^:^2^", false, tokenLookahead(1));
-                            } 
+								error(5, "Type at: " + to_string(*typePtr->lineIndex + 1) + ":" + to_string(*typePtr->colIndex + 1) + ", doesnt match type of value of '^0^' at ^1^:^2^", true, tokenLookahead(1));
+                            } */
 
                         }
                         else
@@ -351,6 +421,10 @@ Parser::multipleVarInitializations(FuncStatement *theFunc, vector<string> theNam
                         theVar->mType = typePtr;
                         theVar->mValue = nullptr;
                         theFunc->mStatementArray.push_back(theVar);
+                        Identifier *myId = new Identifier;
+                        myId->mName = currentToken;
+                        myId->mType = typePtr->type;
+                        theNames.push_back(myId);
                         fetchToken();
                     }
                     else
@@ -389,7 +463,7 @@ Parser::multipleVarInitializations(FuncStatement *theFunc, vector<string> theNam
 
 
 void  //NOTE: theNames can't be a refrence because the deeper we go in scoping we don't want to carry junk back out with us.
-Parser::doParseOnFunc(FuncStatement *theFunc, vector<string> theNames)
+Parser::doParseOnFunc(FuncStatement *theFunc, vector<Identifier*> theNames)
 {
     while(!itAtEnd)
     {
@@ -406,20 +480,24 @@ Parser::doParseOnFunc(FuncStatement *theFunc, vector<string> theNames)
                 {
                     if(currentToken->type == tokenLookahead(3)->type)
                     {
-                        if(doesNameNotExist(theNames, tokenLookahead(1)->cargo))
+                        if(doesNameNotExist(theNames, tokenLookahead(1)) == nullptr)
                         {
                             //todo: generalize this into a function... perhaps?
-                            theNames.push_back(tokenLookahead(1)->cargo);
                             VarStatement* theVar = new VarStatement;
                             theVar->mType = currentToken;
                             fetchToken();
-                            theVar->mName = currentToken->cargo;
+                            theVar->mName = tokenLookahead(1)->cargo;
                             fetchToken(2);
                             ExpressionStatement* theStatement = new ExpressionStatement;
                             //theStatement->mTokenArray.push_back(
                               //      currentToken); //todo: update, but this requires fully implemented expression obj
                             theVar->mValue = theStatement;
                             theFunc->mStatementArray.push_back(theVar);
+                            Identifier *myId = new Identifier;
+                            myId->mName = tokenLookahead(1);
+                            myId->mValue = theStatement;
+                            myId->mType = currentToken->type;
+                            theNames.push_back(myId);
                             fetchToken();
                         }
                         else
@@ -444,12 +522,24 @@ Parser::doParseOnFunc(FuncStatement *theFunc, vector<string> theNames)
             }
             else if(tokenLookahead(2)->type == kToken_SEMICOLON)
             {
-                VarStatement* theVar = new VarStatement;
-                theVar->mType = currentToken;
-                fetchToken();
-                theVar->mName = currentToken->cargo;
-                theVar->mValue = nullptr;
-                theFunc->mStatementArray.push_back(theVar);
+                if(doesNameNotExist(theNames, tokenLookahead(1)) == nullptr)
+                {
+                    VarStatement* theVar = new VarStatement;
+                    theVar->mType = currentToken;
+                    fetchToken();
+                    theVar->mName = tokenLookahead(1)->cargo;
+                    theVar->mValue = nullptr;
+
+                    theFunc->mStatementArray.push_back(theVar);
+                    Identifier* myId = new Identifier;
+                    myId->mName = tokenLookahead(1);
+                    myId->mType = currentToken->type;
+                    theNames.push_back(myId);
+                }
+                else
+                {
+                    error(6, "Identifier '^0^' at ^1^:^2^ has already been used!", false, tokenLookahead(1));
+                }
             }
             else if(tokenLookahead(2)->type == kToken_COMMA)
             {
@@ -477,8 +567,7 @@ Parser::parse()
     Token* gType = new Token;
     gType->type = kToken_NUMBER;
     gFunc->mType = gType;
-    vector<string> names;
-    names.push_back("");
+    vector<Identifier*> names;
 
     doParseOnFunc(gFunc, names);
 

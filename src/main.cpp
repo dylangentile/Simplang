@@ -18,6 +18,7 @@ int main(int argc, char const *argv[])
 	myParser->parse();
     cout << "\n\n"<< myParser->mLog << "\n\n";
 
+    cout << warningOut() << "\n\n";
 	cout << errorOut() << "\n";
 	return 0;
 }

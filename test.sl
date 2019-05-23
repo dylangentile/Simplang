@@ -1,3 +1,4 @@
-num g, i = (1 + 2 * 3);
+num a, b, c;
+num g, i = a + b + c;
 //num b = 6;
 //num a = 7.0;

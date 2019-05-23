@@ -2,7 +2,6 @@
 #include <vector>
 #include "scanner.h"
 
-
 typedef enum
 {
 	kCat_NULL,
@@ -57,6 +56,7 @@ typedef struct{
 	std::vector<Character*> cObjArray;
 	TokenID type, subType;
 	TokenCAT cat;
+	//bool funcId = false;
 	void charPass(Character *x)
 	{
 		subType = kToken_NULL;
@@ -98,8 +98,11 @@ typedef struct{
 
 typedef struct
 {
-	Token* mType, * mIdentifier, * overload = nullptr;
+	Token* mType, *mIdentifier, *overload = nullptr;
 }Arguement;
+
+
+
 
 
 

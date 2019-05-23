@@ -4,6 +4,15 @@
 #include "error.h"
 #include <map>
 
+typedef struct
+{
+  Token *mName;
+  Statement *mValue = nullptr;
+  FuncStatement *mFunc = nullptr;
+  TokenID mType;
+} Identifier;
+
+
 class Parser {
 public:
 	Parser(const std::string &fileName, bool fVerbose = true);
@@ -22,12 +31,12 @@ public:
 private:
     void fetchToken(unsigned t = 1);
     Token* tokenLookahead(unsigned x);
-    void doParseOnFunc(FuncStatement *theFunc, std::vector<std::string> theNames);
-    void multipleVarInitializations(FuncStatement *theFunc, std::vector<std::string> theNames);
-    ExpressionStatement* parseExpression(std::vector<std::string> theNames);
-    BinExpressionStatement* parseBinExpression(std::vector<std::string> theNames, Token* prevOp, BinExpressionStatement *theTerms = nullptr);
+    void doParseOnFunc(FuncStatement *theFunc, std::vector<Identifier *> theNames);
+    void multipleVarInitializations(FuncStatement *theFunc, std::vector<Identifier*> &theNames);
+    ExpressionStatement* parseExpression(std::vector<Identifier *> theNames, TokenID type);
+    BinExpressionStatement* parseBinExpression(std::vector<Identifier *> theNames, TokenID type, Token* prevOp, BinExpressionStatement *theTerms = nullptr);
     unsigned int getPrecedence(Token* x);
-    bool doesNameNotExist(std::vector<std::string> &nameArray, const std::string &what);
+    Identifier* doesNameNotExist(std::vector<Identifier *> &nameArray, Token *what);
 
 
 
