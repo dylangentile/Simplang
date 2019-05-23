@@ -559,7 +559,7 @@ Parser::doParseOnFunc(FuncStatement *theFunc, vector<Identifier*> theNames)
 }
 
 
-void
+FuncStatement*
 Parser::parse()
 {
     FuncStatement* gFunc = new FuncStatement;
@@ -574,5 +574,5 @@ Parser::parse()
     if(mVerbose)
         mLog = gFunc->print();
     
-    
+	return gFunc;
 }

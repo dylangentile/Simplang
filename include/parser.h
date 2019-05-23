@@ -18,7 +18,7 @@ public:
 	Parser(const std::string &fileName, bool fVerbose = true);
 	~Parser() = default;
 	//void init(const std::string &fileName, bool fVerbose = true);
-	void parse();
+	FuncStatement* parse();
     //std::string print();
 
 
