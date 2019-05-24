@@ -79,9 +79,9 @@ public:
 	bool compareName(const std::string& theName) { return false; }
 	std::string print() override;
 	void insertOp(Token* x);
-protected:
-	TokenID mValue;
-	Token* ogToken;
+    TokenID mValue;
+    Token* ogToken;
+
 };
 
 

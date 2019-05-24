@@ -93,6 +93,9 @@ Lexer::isType(string i_char, TokenID &theId, int &mIt)
 		return false;
 	//todo: rewrite this for better
 	theId = it->second;
+
+	/*if(theId == kToken_NUMBER)
+	    theId = kToken_NUMBER32; //todo: debate whether or not this is good??*/ //also token.h already takes car of this...
 	return true;
 
 
