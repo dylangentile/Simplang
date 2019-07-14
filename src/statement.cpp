@@ -5,6 +5,7 @@ using namespace std;
 VarStatement::VarStatement()
 {
     mValue = nullptr;
+    mId = kState_VAR;
 }
 
 

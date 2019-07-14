@@ -45,6 +45,15 @@ typedef enum
 	kToken_DIVIDE,
 	kToken_MODULO,
 	kToken_POWER,
+	kToken_EQUALITY,
+	kToken_LESS,
+	kToken_GREATER,
+	kToken_NOT,
+	kToken_LESS_EQUAL,
+	kToken_GREATER_EQUAL,
+	kToken_NOT_EQUAL,
+	kToken_LOGIC_AND,
+	kToken_LOGIC_OR,
 	kToken_NULL
 
 } TokenID;

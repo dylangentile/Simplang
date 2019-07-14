@@ -16,7 +16,7 @@ typedef struct
 class Parser {
 public:
 	Parser(const std::string &fileName, bool fVerbose = true);
-	~Parser() = default;
+	~Parser();
 	//void init(const std::string &fileName, bool fVerbose = true);
 	FuncStatement* parse();
     //std::string print();
@@ -41,9 +41,9 @@ private:
 
 
 private:
-    //unsigned whereAmI;
-    std::vector<Token*>::iterator currentTokenIterator;
-    Token *currentToken;
+  //unsigned whereAmI;
+  std::vector<Token*>::iterator currentTokenIterator;
+  Token *currentToken;
 	bool mVerbose;
 	bool itAtEnd;
 	Lexer* myLexer;

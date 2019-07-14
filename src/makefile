@@ -9,7 +9,7 @@ LFLAGS =
 LIBS = 
 #-lmylib -lm
 
-SRCS = main.cpp error.cpp scanner.cpp lexer.cpp parser.cpp statement.cpp
+SRCS = main.cpp error.cpp scanner.cpp lexer.cpp parser.cpp statement.cpp interpreter.cpp object.cpp
 
 OBJS = $(SRCS:.c=.o)
 

@@ -1,5 +1,6 @@
 #include "lexer.h"
 #include "error.h"
+#include <iostream>
 using namespace std;
 
 Lexer::Lexer()
@@ -30,7 +31,15 @@ Lexer::Lexer()
     operatorMap.insert(make_pair("%", kToken_MODULO));
     operatorMap.insert(make_pair("^", kToken_POWER));
 
-
+    operatorMap.insert(make_pair("==", kToken_EQUALITY));
+    operatorMap.insert(make_pair("<", kToken_LESS));
+    operatorMap.insert(make_pair(">", kToken_GREATER));
+    operatorMap.insert(make_pair("!", kToken_NOT));
+    operatorMap.insert(make_pair("<=", kToken_LESS_EQUAL));
+    operatorMap.insert(make_pair(">=", kToken_GREATER_EQUAL));
+    operatorMap.insert(make_pair("!=", kToken_NOT_EQUAL));
+    operatorMap.insert(make_pair("&&", kToken_LOGIC_AND));
+    operatorMap.insert(make_pair("||", kToken_LOGIC_OR));
 
 
 

@@ -1,4 +1,5 @@
 #include "parser.h"
+#include <iostream>
 using namespace std;
 
 Parser::Parser(const string &fileName, bool fVerbose)
@@ -18,13 +19,30 @@ Parser::Parser(const string &fileName, bool fVerbose)
     precedenceMap.insert(make_pair(kToken_DIVIDE, 20));
     precedenceMap.insert(make_pair(kToken_ADD, 10));
     precedenceMap.insert(make_pair(kToken_SUBTRACT, 10));
-    precedenceMap.insert(make_pair(kToken_MODULO, 5)); //is this okay?
+    precedenceMap.insert(make_pair(kToken_MODULO, 7)); //is this okay?
+    precedenceMap.insert(make_pair(kToken_EQUALITY, 5));
+    precedenceMap.insert(make_pair(kToken_LESS, 5));
+    precedenceMap.insert(make_pair(kToken_GREATER, 5));
+    precedenceMap.insert(make_pair(kToken_NOT, 6));
+    precedenceMap.insert(make_pair(kToken_LESS_EQUAL, 5));
+    precedenceMap.insert(make_pair(kToken_GREATER_EQUAL, 5));
+    precedenceMap.insert(make_pair(kToken_NOT_EQUAL, 5));
+    precedenceMap.insert(make_pair(kToken_LOGIC_AND, 4));
+    precedenceMap.insert(make_pair(kToken_LOGIC_OR, 4));
+
 
 
 
 
 
 }
+
+Parser::~Parser()
+{
+
+}
+
+
 
 void
 Parser::fetchToken(unsigned t)
@@ -77,7 +95,7 @@ ExpressionStatement*
 Parser::parseExpression(vector<Identifier*> theNames, TokenID type)
 {
     //Stack<Token>
-    ExpressionStatement* theStatement = new ExpressionStatement;
+    //ExpressionStatement* theStatement = new ExpressionStatement;
 
 
     Token *lookAhead = tokenLookahead(1);
@@ -89,6 +107,17 @@ Parser::parseExpression(vector<Identifier*> theNames, TokenID type)
         fetchToken(); //go past last value to non operator char.
         return dynamic_cast<ExpressionStatement*>(theTerms);
 
+    }
+    else if(lookAhead->cat == kCat_EOS || lookAhead->type == kToken_COMMA)
+    {
+        BinExpressionStatement* theTerms = new BinExpressionStatement;
+        ValueStatement* myVal = new ValueStatement;
+        myVal->mValue = currentToken;
+        theTerms->mTermVector.push_back(myVal);
+        fetchToken();
+        return dynamic_cast<ExpressionStatement*>(theTerms);
+        
+        
     }
 
 
@@ -149,6 +178,7 @@ Parser::parseBinExpression(vector<Identifier*> theNames, TokenID type, Token* pr
                 }
                 else if(memOf->mValue == nullptr)
                 {
+                    //todo fix this!
                     warning(6, "Uninitialized identifier: '^0^' being passed into expression!", idToken);
                 }
 
@@ -270,6 +300,7 @@ Parser::parseBinExpression(vector<Identifier*> theNames, TokenID type, Token* pr
                 parseBinExpression(theNames, type, opToken, theTerms);
                 OperatorStatement* theOp = new OperatorStatement;
                 theOp->insertOp(opToken);
+                theTerms->mTermVector.push_back(theOp);
                 //cout << " " << opToken->cargo;
             }
             else
@@ -386,22 +417,24 @@ Parser::multipleVarInitializations(FuncStatement *theFunc, vector<Identifier*> &
                         if(tokenLookahead(2)->cat == kCat_VALUE || tokenLookahead(2)->cat == kCat_IDENTIFIER || tokenLookahead(2)->type == kToken_LPAREN)
                         {
                             //if(tokenLookahead(2)->type == kToken_LPAREN || tokenLookahead(2)->type == typePtr->type)
-                            {
-                                Token *theID = currentToken;
-                                ExpressionStatement* theValue;
-                                fetchToken(2);
-                                theValue = parseExpression(theNames, typePtr->type);
-                                VarStatement* theVar = new VarStatement;
-                                theVar->mType = typePtr;
-                                theVar->mName = theID->cargo;
-                                theVar->mValue = theValue;
-                                theFunc->mStatementArray.push_back(theVar);
-                                Identifier *myId = new Identifier;
-                                myId->mValue = theValue;
-                                myId->mName = theID;
-                                myId->mType = typePtr->type;
-                                theNames.push_back(myId);
-                            }
+                                //if(tokenLookahead(3)->type == kToken_SEMICOLON)
+                                {
+                                    Token *theID = currentToken;
+                                    ExpressionStatement* theValue;
+                                    fetchToken(2);
+                                    theValue = parseExpression(theNames, typePtr->type);
+                                    VarStatement* theVar = new VarStatement;
+                                    theVar->mType = typePtr;
+                                    theVar->mName = theID->cargo;
+                                    theVar->mValue = theValue;
+                                    theFunc->mStatementArray.push_back(theVar);
+                                    Identifier *myId = new Identifier;
+                                    myId->mValue = theValue;
+                                    myId->mName = theID;
+                                    myId->mType = typePtr->type;
+                                    theNames.push_back(myId);
+                                }
+                            
                             /*else
                             {
 								error(5, "Type at: " + to_string(*typePtr->lineIndex + 1) + ":" + to_string(*typePtr->colIndex + 1) + ", doesnt match type of value of '^0^' at ^1^:^2^", true, tokenLookahead(1));
@@ -429,7 +462,7 @@ Parser::multipleVarInitializations(FuncStatement *theFunc, vector<Identifier*> &
                     }
                     else
                     {
-                        //todo: this error
+                        error(6, "Identifier initialization is followed by invalid token ^0^ at ^1^:^2^", true, tokenLookahead(1));
                     }
                 }
                 else
@@ -476,49 +509,9 @@ Parser::doParseOnFunc(FuncStatement *theFunc, vector<Identifier*> theNames)
             //are we initializing a variable
             if(tokenLookahead(2)->type == kToken_EQUALS && tokenLookahead(3)->cat == kCat_VALUE)
             {
-                if(tokenLookahead(4)->type == kToken_SEMICOLON)
-                {
-                    if(currentToken->type == tokenLookahead(3)->type)
-                    {
-                        if(doesNameNotExist(theNames, tokenLookahead(1)) == nullptr)
-                        {
-                            //todo: generalize this into a function... perhaps?
-                            VarStatement* theVar = new VarStatement;
-                            theVar->mType = currentToken;
-                            fetchToken();
-                            theVar->mName = tokenLookahead(1)->cargo;
-                            fetchToken(2);
-                            ExpressionStatement* theStatement = new ExpressionStatement;
-                            //theStatement->mTokenArray.push_back(
-                              //      currentToken); //todo: update, but this requires fully implemented expression obj
-                            theVar->mValue = theStatement;
-                            theFunc->mStatementArray.push_back(theVar);
-                            Identifier *myId = new Identifier;
-                            myId->mName = tokenLookahead(1);
-                            myId->mValue = theStatement;
-                            myId->mType = currentToken->type;
-                            theNames.push_back(myId);
-                            fetchToken();
-                        }
-                        else
-                        {
-							error(6, "Identifier '^0^' at ^1^:^2^ has already been used!", false, tokenLookahead(1));
-                        }
-                    }
-                    else
-                    {
-						error(6, "Type at: " + to_string(*currentToken->lineIndex + 1) + ":" + to_string(*currentToken->colIndex + 1) + ", doesnt match type of value of '^0^' at ^1^:^2^", false, tokenLookahead(3));
-
-                    }
-                }
-                else if(tokenLookahead(4)->type == kToken_COMMA)
-                {
-                    multipleVarInitializations(theFunc, theNames);
-                }
-                else
-                {
-                    //TODO: ELSE CASE
-                }
+                
+                multipleVarInitializations(theFunc, theNames);
+                
             }
             else if(tokenLookahead(2)->type == kToken_SEMICOLON)
             {
@@ -568,7 +561,7 @@ Parser::parse()
     gType->type = kToken_NUMBER;
     gFunc->mType = gType;
     vector<Identifier*> names;
-
+    cout << printTokenArray(tokenArray);
     doParseOnFunc(gFunc, names);
 
     if(mVerbose)
