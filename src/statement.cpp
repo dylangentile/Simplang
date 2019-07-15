@@ -146,7 +146,12 @@ OperatorStatement::insertOp(Token* x)
 	ogToken = x;
 }
 
+string
+VariantPlaceHolder::print()
+{
 
+	return std::string("VariantPlaceHolder");
+}
 
 
 

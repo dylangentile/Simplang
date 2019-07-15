@@ -2,7 +2,6 @@
 #include <cstdint>
 #include <map>
 #include "token.h"
-#include "statement.h"
 
 typedef enum
 {
@@ -10,7 +9,8 @@ typedef enum
   p16 = 16,
   p32 = 32,
   p64 = 64,
-  p128 = 128
+  p128 = 128,
+  pFp = 256
 } Precision;
 
 
@@ -35,9 +35,10 @@ public:
   int16_t num16;
   int32_t num32;
   int64_t num64;
+  long double numfp;
   std::string mstring;
   bool mbool;
-  //intptr_t ptr;
+
 
 };
 

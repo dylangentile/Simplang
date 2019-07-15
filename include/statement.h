@@ -1,5 +1,6 @@
 #pragma once
 #include "token.h"
+#include "object.h"
 #include <string>
 #include <vector>
 #include <stack>
@@ -27,7 +28,8 @@ typedef enum
   kState_BINEXPR,
   kState_EXPR,
   kState_OP,
-  kState_VALUE
+  kState_VALUE,
+  kState_VAR_PH
 }StatementID;
 
 
@@ -168,3 +170,24 @@ public:
     bool compareName(const std::string &theName);
 	std::string print();
 };
+
+
+class VariantPlaceHolder : public Statement
+{
+public:
+	VariantPlaceHolder() : mId(kState_VAR_PH) {}
+	~VariantPlaceHolder() = default;
+	bool compareName(const std::string& theName){ return false; }
+	StatementID mId;
+	StatementID fetchId(){return mId;}
+	std::string print();
+	Variant* mVar;
+
+};
+
+
+
+
+
+
+

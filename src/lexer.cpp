@@ -348,6 +348,10 @@ Lexer::lex()
         {
             theV->push_back(theToken);
         }
+        if(theToken->subType == kToken_NUMBER128)
+        {
+        	warning(1, "num128 has undefined behaviour! It might do nothing, something, or crash the program...", theToken);
+        }
 	}
 }
 

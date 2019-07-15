@@ -3,7 +3,7 @@
 
 Variant::Variant()
 {
-	
+	mType = vType_UNSET;
 }
 
 Variant::~Variant()

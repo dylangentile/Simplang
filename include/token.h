@@ -54,6 +54,7 @@ typedef enum
 	kToken_NOT_EQUAL,
 	kToken_LOGIC_AND,
 	kToken_LOGIC_OR,
+	kToken_OBJECT,
 	kToken_NULL
 
 } TokenID;
@@ -88,7 +89,7 @@ typedef struct{
 	{
 		if (type == kToken_NUMBER && subType == kToken_NULL)
 		{
-			subType = kToken_NUMBER32;//default number prescision
+			subType = kToken_NUMBER64;//default number prescision
 		}
 		else if (type == kToken_NUMBER8 ||
 			type == kToken_NUMBER16 ||
