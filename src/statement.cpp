@@ -2,9 +2,10 @@
 
 using namespace std;
 
-VarStatement::VarStatement()
+VarStatement::VarStatement(bool ref)
 {
     mValue = nullptr;
+    refrencing = ref;
     mId = kState_VAR;
 }
 
@@ -149,8 +150,13 @@ OperatorStatement::insertOp(Token* x)
 string
 VariantPlaceHolder::print()
 {
-
 	return std::string("VariantPlaceHolder");
+}
+
+string
+SpecializedFunctionCall::print()
+{
+	return std::string("SpecializedFunctionCall");
 }
 
 

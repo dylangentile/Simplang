@@ -38,6 +38,8 @@ private:
     unsigned int getPrecedence(Token* x);
     Identifier* doesNameNotExist(std::vector<Identifier *> &nameArray, Token *what);
 
+    std::vector<Statement*> parseFuncArgs(std::vector<Identifier*> theNames);
+
 
 
 private:

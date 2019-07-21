@@ -261,7 +261,7 @@ errorOut()
 {
     string finalMsg = "";
 	if(totalCount == 0)
-		return "\nSuccess!";
+		return "";
 
 	for(auto it = vError.begin(); it != vError.end(); ++it)
     {

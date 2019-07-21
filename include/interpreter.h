@@ -43,4 +43,9 @@ private:
 	uint8_t currentAddress;
 
 
+	Variant* findVariant(std::string name, StackFrame* theFrame);
+
+	void doPrint(std::vector<Statement*> args, StackFrame* theFrame);
+
+
 };

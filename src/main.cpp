@@ -3,23 +3,28 @@
 #include "error.h"
 #include "parser.h"
 #include "interpreter.h"
+#include "data.h"
 
 using namespace std;
 
 
-int main(int argc, char const *argv[])
+
+
+
+int main(int argc, const char *argv[])
 {
 	cout << "\n";
-	if(argc <= 1)
-		error(0, "No input file!", true);
+	vector<string> allSources = theData.parseArgs(argc, argv);
+
+	
 	
 
-    string theFile = argv[1];
-	Parser *myParser = new Parser(theFile, true);
+    string theFile = allSources[0];
+	Parser *myParser = new Parser(theFile, !theData.hush);
 	Interpreter* myInterpreter = new Interpreter(myParser->parse());
-	cout << "\n\n" << myParser->mLog << "\n\n";
-	cout << warningOut() << "\n\n";
-	cout << errorOut() << "\n";
+	if(theData.printValues) cout << "\n\n" << myParser->mLog << "\n\n";
+	if(theData.printWarnings) cout << warningOut() << "\n\n";
+	//cout << errorOut() << "\n\n\n";
 	myInterpreter->interpret();
 	
 

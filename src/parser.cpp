@@ -1,4 +1,5 @@
 #include "parser.h"
+//#include "data.h"
 #include <iostream>
 using namespace std;
 
@@ -91,6 +92,32 @@ Parser::doesNameNotExist(vector<Identifier*> &nameArray, Token *what)
 
 //#include <iostream>
 
+vector<Statement*>
+Parser::parseFuncArgs(vector<Identifier*> theNames)
+{
+    vector<Statement*> retVec;
+    for(;currentToken->type != kToken_RPAREN; fetchToken())
+    {
+        if(currentToken->cat == kCat_IDENTIFIER)
+        {
+            Identifier* myId = doesNameNotExist(theNames, currentToken);
+            if(myId != nullptr)
+            {
+                VarStatement* myVar = new VarStatement(true);
+                myVar->mName = myId->mName->cargo;
+                retVec.push_back(dynamic_cast<Statement*>(myVar));
+            }
+            else
+            {
+                error(6, "Passed function arguement '^0^' at ^1^:^2^ that does not exist!", true, currentToken);
+            }
+        }
+    }
+
+
+    return retVec;
+}
+
 ExpressionStatement*
 Parser::parseExpression(vector<Identifier*> theNames, TokenID type)
 {
@@ -119,6 +146,8 @@ Parser::parseExpression(vector<Identifier*> theNames, TokenID type)
         
         
     }
+
+    return nullptr;
 
 
 
@@ -547,6 +576,28 @@ Parser::doParseOnFunc(FuncStatement *theFunc, vector<Identifier*> theNames)
                 //TODO: WEIRD ELSE CASE
             }
         }
+        else if(currentToken->cat == kCat_KEYWORD)
+        {
+            if(currentToken->type == kToken_PRINT)
+            {
+                if(tokenLookahead(1)->type == kToken_LPAREN)
+                {
+                    fetchToken(2);
+                    SpecializedFunctionCall* myPrinter = new SpecializedFunctionCall(kFunc_PRINT);
+                    myPrinter->mArgArray = parseFuncArgs(theNames);
+                    theFunc->mStatementArray.push_back(myPrinter);
+                    fetchToken();
+                    if(currentToken->type != kToken_SEMICOLON)
+                    {
+                        error(6, "Fuction Call at ^1^:^2^ is missing a ending semicolon!", true, currentToken);
+                    }
+                }
+                else
+                {
+                    error(6, "Keyword 'print' followed by unknown token '^0^' at ^1^:^2^. Was expecting '('!", true, tokenLookahead(1));
+                }
+            }
+        }
 		fetchToken();
     }
 }
@@ -561,7 +612,8 @@ Parser::parse()
     gType->type = kToken_NUMBER;
     gFunc->mType = gType;
     vector<Identifier*> names;
-    cout << printTokenArray(tokenArray);
+    if(mVerbose)
+        cout << printTokenArray(tokenArray);
     doParseOnFunc(gFunc, names);
 
     if(mVerbose)

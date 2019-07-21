@@ -5,18 +5,8 @@
 #include <vector>
 #include <stack>
 
-
-//template <typename T>
-/*
-class Term
-{
-public:
-    Term();
-    ~Term();
-    std::string print();
-
-};
-*/
+//TODO: remove all = default constructors/destructors 
+//and handwrite them to prevent unknown/undefined behavior, with regard to simplang(not c++)
 
 
 
@@ -29,11 +19,15 @@ typedef enum
   kState_EXPR,
   kState_OP,
   kState_VALUE,
-  kState_VAR_PH
+  kState_VAR_PH,
+  kState_SPEC_FUNC
 }StatementID;
 
 
-
+typedef enum 
+{
+	kFunc_PRINT
+}FunctionID;
 
 
 class Statement
@@ -81,6 +75,20 @@ public:
 
 
 
+};
+
+class SpecializedFunctionCall : public Statement
+{
+public:
+	SpecializedFunctionCall() { mId = kState_SPEC_FUNC; }
+	SpecializedFunctionCall(FunctionID theFID) : fId(theFID) { mId = kState_SPEC_FUNC; }
+	~SpecializedFunctionCall() = default;
+	std::string print();
+	bool compareName(const std::string& theName) { return false; }
+	StatementID mId;
+	StatementID fetchId(){return mId;}
+	FunctionID fId;
+	std::vector<Statement*> mArgArray;
 };
 
 
@@ -158,7 +166,7 @@ public:
 class VarStatement : public Statement
 {
 public:
-	VarStatement();
+	VarStatement(bool ref = false);
 	~VarStatement() = default;
 	std::string mName;
 	Token* mType;
@@ -166,7 +174,7 @@ public:
     StatementID mId;
     StatementID fetchId(){return mId;}
 
-
+    bool refrencing;
     bool compareName(const std::string &theName);
 	std::string print();
 };

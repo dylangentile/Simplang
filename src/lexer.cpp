@@ -291,17 +291,42 @@ Lexer::fetchTokenPtr()
 
 	if(c1 == "\"")
 	{
+        //todo: account for all escape codes...
+		getCharPackage();
+		if(c1 != "\"")
+		{
+            if(c1 == "\\")
+            {
+                getCharPackage();
+                if(c1 == "n")
+                {
+                    c1Char->cargo = "\n";
+                }
+            }
+            theToken->charPass(c1Char);
+		}
 		getCharPackage();
 		while(c1 != "\"")
 		{
-			if(c1 == "\0")
-				error(5, "String ^0^ opened at ^1^:^2^ doesn't close before end of file", false, theToken);
-			theToken->addChar(c1Char);
-			getCharPackage();
+			if(c1 == "\\")
+			{
+				getCharPackage();
+				if(c1 == "n")
+				{
+					c1Char->cargo = "\n";
+				}
+				theToken->addChar(c1Char);
+				getCharPackage();
+			}
+			else
+			{
+				theToken->addChar(c1Char);
+				getCharPackage();
+			}
+			
 		}
-		theToken->addChar(c1Char);
-		theToken->type = kToken_STRING;
 		theToken->cat = kCat_VALUE;
+		theToken->type = kToken_STRING;
 		return theToken;
 
 	}

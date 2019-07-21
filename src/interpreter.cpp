@@ -125,7 +125,7 @@ EvaluateBinExpr(Variant* dest, BinExpressionStatement* theExpr)
 
                 if((*it)->fetchId() == kState_VALUE)
                 {
-                    val2 = ValState_to_Variant(*dynamic_cast<ValueStatement*>(*it));
+                    val1 = ValState_to_Variant(*dynamic_cast<ValueStatement*>(*it));
                     it--;
                     if((*it)->fetchId() == kState_FUNCCALL)
                     {
@@ -136,19 +136,19 @@ EvaluateBinExpr(Variant* dest, BinExpressionStatement* theExpr)
                     
                     if((*it)->fetchId() == kState_VALUE)
                     {
-                        val1 = ValState_to_Variant(*dynamic_cast<ValueStatement*>(*it));
+                        val2 = ValState_to_Variant(*dynamic_cast<ValueStatement*>(*it));
                     }
                     else if((*it)->fetchId() == kState_VAR_PH)
                     {
                         VariantPlaceHolder* poop = dynamic_cast<VariantPlaceHolder*>(*it);
-                        val1 = *(poop->mVar);
+                        val2 = *(poop->mVar);
                         delete poop->mVar;
                     }
                 }
                 else if((*it)->fetchId() == kState_VAR_PH)
                 {
                     VariantPlaceHolder* poop2 = dynamic_cast<VariantPlaceHolder*>(*it);
-                    val2 = *(poop2->mVar);
+                    val1 = *(poop2->mVar);
                     delete poop2->mVar;
                     it--;
                     if((*it)->fetchId() == kState_FUNCCALL)
@@ -160,12 +160,12 @@ EvaluateBinExpr(Variant* dest, BinExpressionStatement* theExpr)
                     
                     if((*it)->fetchId() == kState_VALUE)
                     {
-                        val1 = ValState_to_Variant(*dynamic_cast<ValueStatement*>(*it));
+                        val2 = ValState_to_Variant(*dynamic_cast<ValueStatement*>(*it));
                     }
                     else if((*it)->fetchId() == kState_VAR_PH)
                     {
                         VariantPlaceHolder* poop = dynamic_cast<VariantPlaceHolder*>(*it);
-                        val1 = *(poop->mVar);
+                        val2 = *(poop->mVar);
                         delete poop->mVar;
 
                     }
@@ -236,7 +236,78 @@ EvaluateBinExpr(Variant* dest, BinExpressionStatement* theExpr)
         }
 
     }
-    dest = (dynamic_cast<VariantPlaceHolder*>(exprVector[0]))->mVar;
+    if(exprVector[0]->fetchId() == kState_VAR_PH)
+    {
+        *dest = *(dynamic_cast<VariantPlaceHolder*>(exprVector[0]))->mVar;
+    }
+    else if(exprVector[0]->fetchId() == kState_VALUE)
+    {
+        *dest = ValState_to_Variant(*dynamic_cast<ValueStatement*>(exprVector[0]));
+    }
+}
+
+Variant* 
+Interpreter::findVariant(string name, StackFrame* theFrame)
+{
+    auto finder = theFrame->VariantMap.find(name);
+    if(finder == theFrame->VariantMap.end())
+        return nullptr;
+
+    return finder->second;
+}
+
+void 
+Interpreter::doPrint(vector<Statement*> args, StackFrame* theFrame)
+{
+    for(auto it = args.begin(); it != args.end(); ++it)
+    {
+        if((*it)->fetchId() == kState_VAR)
+        {
+            VarStatement* myVar = dynamic_cast<VarStatement*>(*it);
+            if(myVar->refrencing)
+            {
+                Variant* printedOne = findVariant(myVar->mName, theFrame);
+                if(printedOne == nullptr)
+                {
+                    error(7, "Runtime error! Printing non-existant variable!\n P.S.(The parser failed to find this! You should never see this error!)", true);
+                }
+                if(printedOne->mType == vType_NUM)
+                {
+                    switch(printedOne->mPrec){
+                        case p8: cout << printedOne->num8;
+                            break;
+                        case p16: cout << printedOne->num16;
+                            break;
+                        case p32: cout << printedOne->num32;
+                            break;
+                        case p64: cout << printedOne->num64;
+                            break;
+                        case pFp: cout << printedOne->numfp;
+                            break;
+                    }
+                }
+                else if(printedOne->mType == vType_BOOL)
+                {
+                    if(printedOne->mbool)
+                    {
+                        cout << "true";
+                    }
+                    else
+                    {
+                        cout << "false";
+                    }
+                }
+                else if(printedOne->mType == vType_STR)
+                {
+                    cout << printedOne->mstring;
+                }
+            }
+            else
+            {
+                //todo error/warning creating variable 'inline'
+            }
+        }
+    }
 }
 
 void
@@ -251,13 +322,26 @@ Interpreter::interpret()
         {
             VarStatement* theVar = dynamic_cast<VarStatement*>(*currentStatement);
             Variant* myVariant = new Variant;
-            if(theVar->mValue->fetchId() == kState_BINEXPR)
+            if(theVar->mValue == nullptr)
+            {
+                //set memory later...
+            }
+            else if(theVar->mValue->fetchId() == kState_BINEXPR)
             {
                 BinExpressionStatement* theExpr = dynamic_cast<BinExpressionStatement*>(theVar->mValue);
                 EvaluateBinExpr(myVariant, theExpr);
+                theFrame->VariantMap.insert(make_pair(theVar->mName, myVariant));
             }
 
 
+        }
+        else if((*currentStatement)->fetchId() == kState_SPEC_FUNC)
+        {
+            SpecializedFunctionCall* mySpecFunc = dynamic_cast<SpecializedFunctionCall*>(*currentStatement);
+            if(mySpecFunc->fId == kFunc_PRINT)
+            {
+                doPrint(mySpecFunc->mArgArray, theFrame);
+            }
         }
     }
 
