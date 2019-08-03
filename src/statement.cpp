@@ -2,10 +2,9 @@
 
 using namespace std;
 
-VarStatement::VarStatement(bool ref)
+VarStatement::VarStatement()
 {
     mValue = nullptr;
-    refrencing = ref;
     mId = kState_VAR;
 }
 
@@ -130,7 +129,7 @@ ValueStatement::print()
 
 ValueRefrenceStatement::ValueRefrenceStatement() : mId(kState_VALUE_REFRENCE)
 {
-	
+
 }
 
 string 

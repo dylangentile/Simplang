@@ -16,11 +16,13 @@ Specific Types
 - `num16`     16 bits
 - `num32`     32 bits
 - `num64`     64 bits
-- `num128`    128 bits - support is questionable(use at your own risk!)
-- `ptr`        A blank pointer. can be used like `void* x;` or `ptr num x;`, however it's a little fancier...
-
+- `numfp`     Equivalent to C++ long double.
+- `ptr`       A blank pointer. can be used like `void* x;` or `ptr num x;`, however it's a little fancier...
+- `void`	  Function that returns nothing
+- `typename` You can store types in a typename variable. ie `typename T = numfp` You can then use the typename to create new variables, ie `typename T = numfp; T y = 0.7;`
+ - `dynamic`  For functions, it dynamically changes the return type of the function depending on the type of the return value. With regard to variables, it behaves just like a c++ `auto`.
 Note: 
-It's still up to debate but for now there are no global variables.
+It's still up to debate but for now there are no global/static variables.
 
 ### Operators:
 ##### Binary:
@@ -36,8 +38,10 @@ It's still up to debate but for now there are no global variables.
 - `++` increment (note: unlike C++ you <i><u>must</u></i> put the ++/-- <b>after</b> the identifier).
 - `--` decrement
 - `@` Pointer indirection (what's @ this location?)
-- `&` What is th location of this.
+- `&` What is the location of this.
 - `-` make it negative (note: `+` cannot be used as unary operator instead use `abs()`)
+- `!` not (`!true == false`, `!false == true`, etc...)
+
 
 ##### Assignment:
 - `=` Equals
@@ -46,7 +50,46 @@ It's still up to debate but for now there are no global variables.
 - `*=`
 - `/=`
 - `^=` 
-- Note: there is no `%=` because it seems useless/unecessary for most applications.
+- `%=` 
+
+##### Comparison:
+- `==` Equality
+- `!=` not equal
+- `<` less than
+- `>` greater than
+- `<=` less than or equal to
+- `>=` greater than or equal to
+- `&&` logical AND
+- `||` logical OR
+
+(these don't behave like in other languages. If you're looking for bitwise and/or, do the following `num x = 6 BITAND 1` or `num x = 6 BITOR 1`)
+- `<>` between(see next)
+- `&` instead of writing `x >= 0 && x <= 9` write `x <> 0 & 9`
+- `|` instead of writing `x == 1 || x == 2` write `x == 1 | 2`
+
+##### On Templates/Typing:
+If you read up on the types, simplang has a type called `typename`. This is similar to templatization but in a more functional, dynamic way. You can write code such as:
+```Simplang
+dynamic giveMeZerosRepresentationInTypeX(typename x)
+{
+	x ans = null;
+	if(x == num)
+	{
+		ans = 0;
+	}
+	else if(x == bool)
+	{
+		ans = (bool)0;
+	}
+	else if(x == string)
+	{
+		ans = "0";
+	}
+
+	return ans;
+}
+```
+
 
 
 ### Expression Evaluation:

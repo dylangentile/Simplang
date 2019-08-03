@@ -109,20 +109,7 @@ public:
 };
 
 
-class ValueRefrenceStatement : public Statement
-{
-public:
-	ValueRefrenceStatement(); 
-	~ValueRefrenceStatement(){}
-	Token* refName;
-	bool compareName(const std::string& theName) { return false; }
-	std::string print();
-	StatementID mId;
-	StatementID fetchId(){return mId;}
 
-
-
-};
 
 class OperatorStatement : public Statement
 {
@@ -179,11 +166,26 @@ public:
 };
 
 
+class ValueRefrenceStatement : public Statement
+{
+public:
+	ValueRefrenceStatement(); 
+	~ValueRefrenceStatement(){}
+	Token* refName;
+	ExpressionStatement* mExpr;
+	bool compareName(const std::string& theName) { return false; }
+	std::string print();
+	StatementID mId;
+	StatementID fetchId(){return mId;}
+
+
+
+};
 
 class VarStatement : public Statement
 {
 public:
-	VarStatement(bool ref = false);
+	VarStatement();
 	~VarStatement() = default;
 	std::string mName;
 	Token* mType;
@@ -191,7 +193,6 @@ public:
     StatementID mId;
     StatementID fetchId(){return mId;}
 
-    bool refrencing;
     bool compareName(const std::string &theName);
 	std::string print();
 };

@@ -11,11 +11,14 @@ Lexer::Lexer()
 	typeMap.insert(make_pair("num16", kToken_NUMBER16));
 	typeMap.insert(make_pair("num32", kToken_NUMBER32));
 	typeMap.insert(make_pair("num64", kToken_NUMBER64));
-	typeMap.insert(make_pair("num128", kToken_NUMBER128));
+	typeMap.insert(make_pair("numfp", kToken_NUMBER_FP));
 	typeMap.insert(make_pair("bool", kToken_BOOL));
 	typeMap.insert(make_pair("string", kToken_STRING));
 	typeMap.insert(make_pair("ptr", kToken_POINTER));
     typeMap.insert(make_pair("void", kToken_VOID));
+    typeMap.insert(make_pair("typename", kToken_TYPENAME));
+    typeMap.insert(make_pair("dynamic", kToken_DYNAMIC));
+
 
 
     keywordMap.insert(make_pair("print", kToken_PRINT));
@@ -30,6 +33,14 @@ Lexer::Lexer()
     operatorMap.insert(make_pair("/", kToken_DIVIDE));
     operatorMap.insert(make_pair("%", kToken_MODULO));
     operatorMap.insert(make_pair("^", kToken_POWER));
+
+
+    operatorMap.insert(make_pair("+=", kToken_PLUS_EQUALS));
+    operatorMap.insert(make_pair("-=", kToken_MINUS_EQUALS));
+    operatorMap.insert(make_pair("*=", kToken_MULTIPLY_EQUALS));
+    operatorMap.insert(make_pair("/=", kToken_DIVIDE_EQUALS));
+    operatorMap.insert(make_pair("^=", kToken_POWER_EQUALS));
+    operatorMap.insert(make_pair("%=", kToken_MOD_EQUALS));
 
     operatorMap.insert(make_pair("==", kToken_EQUALITY));
     operatorMap.insert(make_pair("<", kToken_LESS));
@@ -365,10 +376,6 @@ Lexer::lex()
         {
             theV->push_back(theToken);
         }
-        if(theToken->subType == kToken_NUMBER128)
-        {
-        	warning(1, "num128 has undefined behaviour! It might do nothing, something, or crash the program...", theToken);
-        }
 	}
 }
 
@@ -412,10 +419,6 @@ printTokenArray(vector<Token*> *v)
 			else if (theToken->type == kToken_NUMBER64)
 			{
 				msg += "\n NUMBER64(TYPE): " + theToken->cargo;
-			}
-			else if (theToken->type == kToken_NUMBER128)
-			{
-				msg += "\nNUMBER128(TYPE): " + theToken->cargo;
 			}
 			else if (theToken->type == kToken_UNKNOWN)
 			{

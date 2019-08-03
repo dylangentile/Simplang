@@ -43,8 +43,6 @@ public:
 
   void cast(ValType toWhat, Precision thePrec = p64);
   
-
-
 };
 
 

@@ -103,8 +103,8 @@ Parser::parseFuncArgs(vector<Identifier*> theNames)
 			Identifier* myId = doesNameNotExist(theNames, currentToken);
 			if(myId != nullptr)
 			{
-				VarStatement* myVar = new VarStatement(true);
-				myVar->mName = myId->mName->cargo;
+				ValueRefrenceStatement* myVar = new ValueRefrenceStatement;
+				myVar->refName = myId->mName;
 				retVec.push_back(dynamic_cast<Statement*>(myVar));
 			}
 			else
@@ -200,7 +200,6 @@ Parser::makeBinExprTerm(Token* outOfMe)
 BinExpressionStatement*
 Parser::parseBinExpression(vector<Identifier*> theNames, TokenID type, Token* prevOp, BinExpressionStatement *theTerms)
 {
-	
 	
 	if(theTerms == nullptr)
 	{
@@ -592,6 +591,33 @@ Parser::doParseOnFunc(FuncStatement *theFunc, vector<Identifier*> theNames)
 			else
 			{
 				//TODO: WEIRD ELSE CASE
+			}
+		}
+		else if(currentToken->cat == kCat_IDENTIFIER)
+		{
+			Identifier* refrencing = doesNameNotExist(theNames, currentToken);
+			if(refrencing != nullptr)
+			{
+				//todo check for function
+				if(tokenLookahead(1)->type == kToken_EQUALS)
+				{
+					ValueRefrenceStatement* theref = new ValueRefrenceStatement;
+					theref->refName = currentToken;
+					ExpressionStatement* theValue;
+					fetchToken(2);
+					theValue = parseExpression(theNames, refrencing->mType);
+					theref->mExpr = theValue;
+					theFunc->mStatementArray.push_back(theref);
+					
+					refrencing->mValue = theValue;
+				}
+
+
+
+			}
+			else
+			{
+				error(6, "Identifier '^0^' at ^1^:^2^ has not been declared!", true, currentToken);
 			}
 		}
 		else if(currentToken->cat == kCat_KEYWORD)

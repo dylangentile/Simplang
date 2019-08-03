@@ -31,11 +31,18 @@ typedef enum
 	kToken_NUMBER16,
 	kToken_NUMBER32,
 	kToken_NUMBER64,
-	kToken_NUMBER128,
 	kToken_POINTER,
 	kToken_BOOL,
+	kToken_TYPENAME,
+	kToken_DYNAMIC,
 	kToken_PRINT,
 	kToken_EQUALS,
+	kToken_PLUS_EQUALS,
+	kToken_MINUS_EQUALS,
+	kToken_MULTIPLY_EQUALS,
+	kToken_DIVIDE_EQUALS,
+	kToken_POWER_EQUALS,
+	kToken_MOD_EQUALS,
 	kToken_LPAREN,
 	kToken_VOID,
 	kToken_RPAREN,
@@ -95,7 +102,6 @@ typedef struct{
 			type == kToken_NUMBER16 ||
 			type == kToken_NUMBER32 ||
 			type == kToken_NUMBER64 ||
-			type == kToken_NUMBER128 ||
 			type == kToken_NUMBER_FP)
 		{
 			subType = type;

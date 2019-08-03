@@ -7,6 +7,15 @@ Variant::Variant()
 {
 	mType = vType_UNSET;
 	dataType = vType_UNSET;
+	num8 = 0;
+	num16 = 0;
+	num32 = 0;
+	num64 = 0;
+	numfp = 0.0;
+	mstring = "";
+	mbool = false;
+	mptr = (void*)0;
+	
 }
 
 Variant::~Variant()

@@ -6,9 +6,12 @@
 
 using namespace std;
 
-int64_t dPower(int64_t x, int64_t y)
+
+
+template <typename T>
+T dPower(T x, T y)
 {
-	int64_t result = x;
+	T result = x;
 	if(y == 0)
 	{
 		return 1;
@@ -19,7 +22,6 @@ int64_t dPower(int64_t x, int64_t y)
 	}
 	return result;
 }
-
 
 
 StackFrame::StackFrame()
@@ -161,6 +163,11 @@ Interpreter::EvaluateBinExpr(Variant* dest, BinExpressionStatement* theExpr)
 					result->mType = vType_NUM;
 					//result->mPrec = val2Copy.mPrec > val1Copy.mPrec ? val2Copy.mPrec : val1Copy.mPrec;
 					result->mPrec = val2Copy.mPrec;
+
+					if(val1Copy.mType != vType_NUM)
+					{
+
+					}
 					if(val2Copy.mPrec != val1Copy.mPrec)
 					{
 						if(val2Copy.mPrec > val1Copy.mPrec)
@@ -358,14 +365,25 @@ Interpreter::EvaluateBinExpr(Variant* dest, BinExpressionStatement* theExpr)
 		}
 
 	}
+	Variant ans;
 	if(exprVector[0]->fetchId() == kState_VAR_PH)
 	{
-		*dest = *(dynamic_cast<VariantPlaceHolder*>(exprVector[0]))->mVar;
+		
+		ans = *(dynamic_cast<VariantPlaceHolder*>(exprVector[0]))->mVar;
+
 	}
 	else if(exprVector[0]->fetchId() == kState_VALUE)
 	{
-		*dest = ValState_to_Variant(*dynamic_cast<ValueStatement*>(exprVector[0]));
+		
+		ans = ValState_to_Variant(*dynamic_cast<ValueStatement*>(exprVector[0]));
+		
 	}
+
+	if(ans.mType != dest->mType || ans.mPrec != dest->mPrec)
+	{
+		ans.cast(dest->mType, dest->mPrec);
+	}
+	*dest = ans;
 }
 
 Variant* 
@@ -386,20 +404,14 @@ Interpreter::doPrint(vector<Statement*> args, StackFrame* theFrame)
 {
 	for(auto it = args.begin(); it != args.end(); ++it)
 	{
-		if((*it)->fetchId() == kState_VAR || (*it)->fetchId() == kState_VALUE)
+		if((*it)->fetchId() == kState_VALUE_REFRENCE || (*it)->fetchId() == kState_VALUE)
 		{
 			Variant* printedOne = nullptr;
-			if((*it)->fetchId() == kState_VAR)
+			if((*it)->fetchId() == kState_VALUE_REFRENCE)
 			{
-				VarStatement* myVar = dynamic_cast<VarStatement*>(*it);
-				if(myVar->refrencing)
-				{
-					printedOne = findVariant(myVar->mName, theFrame);
-				}
-				else
-				{
-					//todo error/warning creating variable 'inline'
-				}
+				ValueRefrenceStatement* myVar = dynamic_cast<ValueRefrenceStatement*>(*it);
+				printedOne = findVariant(myVar->refName->cargo, theFrame);
+				
 			}   
 			else
 			{
@@ -460,16 +472,54 @@ Interpreter::interpret()
 		{
 			VarStatement* theVar = dynamic_cast<VarStatement*>(*currentStatement);
 			Variant* myVariant = new Variant;
+			if(theVar->mType->type == kToken_NUMBER)
+			{
+				myVariant->mType = vType_NUM;
+				switch(theVar->mType->subType)
+				{
+					case kToken_NUMBER8: myVariant->mPrec = p8;
+					break;
+					case kToken_NUMBER16: myVariant->mPrec = p16;
+					break;
+					case kToken_NUMBER32: myVariant->mPrec = p32;
+					break;
+					case kToken_NUMBER64: myVariant->mPrec = p64;
+					break;
+					case kToken_NUMBER_FP: myVariant->mPrec = pFp;
+					break;
+				}
+			}
+			else if(theVar->mType->type == kToken_STRING)
+			{
+				myVariant->mType = vType_STR;
+			}
+			else if(theVar->mType->type == kToken_BOOL)
+			{
+				myVariant->mType = vType_BOOL;
+			}
+			else if(theVar->mType->type == kToken_POINTER)
+			{
+				myVariant->mType = vType_PTR;
+			}
+			else if(theVar->mType->type == kToken_OBJECT)
+			{
+
+			}
+
+
 			if(theVar->mValue == nullptr)
 			{
+
+
 				//set memory later...
 			}
 			else if(theVar->mValue->fetchId() == kState_BINEXPR)
 			{
 				BinExpressionStatement* theExpr = dynamic_cast<BinExpressionStatement*>(theVar->mValue);
 				EvaluateBinExpr(myVariant, theExpr);
-				theFrame->VariantMap.insert(make_pair(theVar->mName, myVariant));
+				
 			}
+			theFrame->VariantMap.insert(make_pair(theVar->mName, myVariant));
 
 
 		}
@@ -480,6 +530,28 @@ Interpreter::interpret()
 			{
 				doPrint(mySpecFunc->mArgArray, theFrame);
 			}
+		}
+		else if((*currentStatement)->fetchId() == kState_VALUE_REFRENCE)
+		{
+			ValueRefrenceStatement* theRef = dynamic_cast<ValueRefrenceStatement*>(*currentStatement);
+			Variant* refrencingMe = findVariant(theRef->refName->cargo);
+			if(refrencingMe == nullptr)
+			{
+				//todo: error
+			}
+			else
+			{
+				if(theRef->mExpr == nullptr)
+				{
+					//todo: error
+				}
+				else if(theRef->mExpr->fetchId() == kState_BINEXPR)
+				{
+					BinExpressionStatement* theExpr = dynamic_cast<BinExpressionStatement*>(theRef->mExpr);
+					EvaluateBinExpr(refrencingMe, theExpr);
+				}
+			}
+
 		}
 	}
 
