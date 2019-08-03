@@ -261,28 +261,20 @@ Lexer::fetchTokenPtr()
 	if(isNumber(c1))
 	{
 		bool fp = false;
-		if (isNumber(myScanner->lookAhead(1)) || (myScanner->lookAhead(1) == "." && isNumber(myScanner->lookAhead(2))))
+		
+		while(isNumber(myScanner->lookAhead(1)) || myScanner->lookAhead(1) == ".")
 		{
-			if (c1 == ".")
-			{
-				fp = true;
-			}
 			getCharPackage();
-			while (isNumber(myScanner->lookAhead(1)) || (!fp && (c1 == "." && isNumber(myScanner->lookAhead(1)))))
+			theToken->addChar(c1Char);
+			if(c1 == ".")
 			{
-				if (c1 == ".")
-				{
-					fp = true;
-				}
-				theToken->addChar(c1Char);
-				getCharPackage();
+				if(fp)
+					error(6, "number value: '^0^' at ^1^:^2^ has extra periods...", true, theToken);
+				fp = true;
+				
 			}
 		}
-		if (fp)
-		{
-			theToken->addChar(c1Char);
-			//getCharPackage();
-		}
+
 		theToken->type = fp ? kToken_NUMBER_FP : kToken_NUMBER;
 		theToken->cat = kCat_VALUE;
 		theToken->fixTypes();

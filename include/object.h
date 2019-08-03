@@ -30,6 +30,7 @@ public:
   Variant();
   ~Variant();
   ValType mType;
+  ValType dataType; //for the ptr
   Precision mPrec;
   int8_t num8;
   int16_t num16;
@@ -38,6 +39,9 @@ public:
   long double numfp;
   std::string mstring;
   bool mbool;
+  void* mptr;
+
+  void cast(ValType toWhat, Precision thePrec = p64);
   
 
 

@@ -43,8 +43,10 @@ private:
 	uint8_t currentAddress;
 
 
-	Variant* findVariant(std::string name, StackFrame* theFrame);
-
+	Variant* findVariant(std::string name, StackFrame* theFrame = nullptr);
+	void EvaluateBinExpr(Variant* dest, BinExpressionStatement* theExpr);
+	Variant* StatementToVariant(Statement* theStatement);
+	Variant ValState_to_Variant(ValueStatement valState);
 	void doPrint(std::vector<Statement*> args, StackFrame* theFrame);
 
 

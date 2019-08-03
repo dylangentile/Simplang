@@ -9,7 +9,7 @@
 //and handwrite them to prevent unknown/undefined behavior, with regard to simplang(not c++)
 
 
-
+//todo move all implementations to cpp file
 typedef enum
 {
   kState_VAR,
@@ -20,7 +20,8 @@ typedef enum
   kState_OP,
   kState_VALUE,
   kState_VAR_PH,
-  kState_SPEC_FUNC
+  kState_SPEC_FUNC,
+  kState_VALUE_REFRENCE
 }StatementID;
 
 
@@ -107,6 +108,22 @@ public:
 
 };
 
+
+class ValueRefrenceStatement : public Statement
+{
+public:
+	ValueRefrenceStatement(); 
+	~ValueRefrenceStatement(){}
+	Token* refName;
+	bool compareName(const std::string& theName) { return false; }
+	std::string print();
+	StatementID mId;
+	StatementID fetchId(){return mId;}
+
+
+
+};
+
 class OperatorStatement : public Statement
 {
 public:
@@ -184,7 +201,10 @@ class VariantPlaceHolder : public Statement
 {
 public:
 	VariantPlaceHolder() : mId(kState_VAR_PH) {}
-	~VariantPlaceHolder() = default;
+	~VariantPlaceHolder()
+	{
+		delete mVar;
+	}
 	bool compareName(const std::string& theName){ return false; }
 	StatementID mId;
 	StatementID fetchId(){return mId;}

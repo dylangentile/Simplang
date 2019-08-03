@@ -17,10 +17,9 @@ VarStatement::print()
 {
     string msg = mType->cargo + ": " + mName + "= ";
 
+    
     if(mValue != nullptr)
-    {
         msg += mValue->print();
-    }
     else
         msg += "uninitialized";
 
@@ -129,6 +128,17 @@ ValueStatement::print()
 	return mValue->cargo;
 }
 
+ValueRefrenceStatement::ValueRefrenceStatement() : mId(kState_VALUE_REFRENCE)
+{
+	
+}
+
+string 
+ValueRefrenceStatement::print()
+{
+	return refName->cargo;
+}
+
 string
 OperatorStatement::print()
 {
@@ -158,6 +168,8 @@ SpecializedFunctionCall::print()
 {
 	return std::string("SpecializedFunctionCall");
 }
+
+
 
 
 

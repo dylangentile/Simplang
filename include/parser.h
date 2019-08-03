@@ -37,7 +37,7 @@ private:
     BinExpressionStatement* parseBinExpression(std::vector<Identifier *> theNames, TokenID type, Token* prevOp, BinExpressionStatement *theTerms = nullptr);
     unsigned int getPrecedence(Token* x);
     Identifier* doesNameNotExist(std::vector<Identifier *> &nameArray, Token *what);
-
+    Statement* makeBinExprTerm(Token* outOfMe);
     std::vector<Statement*> parseFuncArgs(std::vector<Identifier*> theNames);
 
 

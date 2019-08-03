@@ -287,3 +287,16 @@ warningOut()
 
     return finalMsg + "\n\nSimplang exited with " + to_string(wCount) + " warnings.";
 }
+
+
+
+
+
+
+
+bool isErrors()
+{
+  return totalCount != 0;
+
+}
+
