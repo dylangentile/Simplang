@@ -15,42 +15,42 @@ Lexer::Lexer()
 	typeMap.insert(make_pair("bool", kToken_BOOL));
 	typeMap.insert(make_pair("string", kToken_STRING));
 	typeMap.insert(make_pair("ptr", kToken_POINTER));
-    typeMap.insert(make_pair("void", kToken_VOID));
-    typeMap.insert(make_pair("typename", kToken_TYPENAME));
-    typeMap.insert(make_pair("dynamic", kToken_DYNAMIC));
+	typeMap.insert(make_pair("void", kToken_VOID));
+	typeMap.insert(make_pair("typename", kToken_TYPENAME));
+	typeMap.insert(make_pair("dynamic", kToken_DYNAMIC));
 
 
 
-    keywordMap.insert(make_pair("print", kToken_PRINT));
+	keywordMap.insert(make_pair("print", kToken_PRINT));
 
 	operatorMap.insert(make_pair("=", kToken_EQUALS));
 	operatorMap.insert(make_pair("(", kToken_LPAREN));
 	operatorMap.insert(make_pair(")", kToken_RPAREN));
 
 	operatorMap.insert(make_pair("+", kToken_ADD));
-    operatorMap.insert(make_pair("-", kToken_SUBTRACT));
-    operatorMap.insert(make_pair("*", kToken_MULTIPLY));
-    operatorMap.insert(make_pair("/", kToken_DIVIDE));
-    operatorMap.insert(make_pair("%", kToken_MODULO));
-    operatorMap.insert(make_pair("^", kToken_POWER));
+	operatorMap.insert(make_pair("-", kToken_SUBTRACT));
+	operatorMap.insert(make_pair("*", kToken_MULTIPLY));
+	operatorMap.insert(make_pair("/", kToken_DIVIDE));
+	operatorMap.insert(make_pair("%", kToken_MODULO));
+	operatorMap.insert(make_pair("^", kToken_POWER));
 
 
-    operatorMap.insert(make_pair("+=", kToken_PLUS_EQUALS));
-    operatorMap.insert(make_pair("-=", kToken_MINUS_EQUALS));
-    operatorMap.insert(make_pair("*=", kToken_MULTIPLY_EQUALS));
-    operatorMap.insert(make_pair("/=", kToken_DIVIDE_EQUALS));
-    operatorMap.insert(make_pair("^=", kToken_POWER_EQUALS));
-    operatorMap.insert(make_pair("%=", kToken_MOD_EQUALS));
+	operatorMap.insert(make_pair("+=", kToken_PLUS_EQUALS));
+	operatorMap.insert(make_pair("-=", kToken_MINUS_EQUALS));
+	operatorMap.insert(make_pair("*=", kToken_MULTIPLY_EQUALS));
+	operatorMap.insert(make_pair("/=", kToken_DIVIDE_EQUALS));
+	operatorMap.insert(make_pair("^=", kToken_POWER_EQUALS));
+	operatorMap.insert(make_pair("%=", kToken_MOD_EQUALS));
 
-    operatorMap.insert(make_pair("==", kToken_EQUALITY));
-    operatorMap.insert(make_pair("<", kToken_LESS));
-    operatorMap.insert(make_pair(">", kToken_GREATER));
-    operatorMap.insert(make_pair("!", kToken_NOT));
-    operatorMap.insert(make_pair("<=", kToken_LESS_EQUAL));
-    operatorMap.insert(make_pair(">=", kToken_GREATER_EQUAL));
-    operatorMap.insert(make_pair("!=", kToken_NOT_EQUAL));
-    operatorMap.insert(make_pair("&&", kToken_LOGIC_AND));
-    operatorMap.insert(make_pair("||", kToken_LOGIC_OR));
+	operatorMap.insert(make_pair("==", kToken_EQUALITY));
+	operatorMap.insert(make_pair("<", kToken_LESS));
+	operatorMap.insert(make_pair(">", kToken_GREATER));
+	operatorMap.insert(make_pair("!", kToken_NOT));
+	operatorMap.insert(make_pair("<=", kToken_LESS_EQUAL));
+	operatorMap.insert(make_pair(">=", kToken_GREATER_EQUAL));
+	operatorMap.insert(make_pair("!=", kToken_NOT_EQUAL));
+	operatorMap.insert(make_pair("&&", kToken_LOGIC_AND));
+	operatorMap.insert(make_pair("||", kToken_LOGIC_OR));
 
 
 
@@ -79,12 +79,12 @@ Lexer::isIdentifierChar(string i_char, bool begin)
 	if(begin)
 	{
 		return (theChar >= 'a' && theChar <= 'z') ||
-	 		   (theChar >= 'A' && theChar <= 'Z');
+			   (theChar >= 'A' && theChar <= 'Z');
 	}
 	return (theChar >= 'a' && theChar <= 'z') ||
-	 	   (theChar >= 'A' && theChar <= 'Z') ||
-	 	   (theChar >= '0' && theChar <= '9') ||
-	 	   (theChar == '_');
+		   (theChar >= 'A' && theChar <= 'Z') ||
+		   (theChar >= '0' && theChar <= '9') ||
+		   (theChar == '_');
 }
 
 bool
@@ -115,7 +115,7 @@ Lexer::isType(string i_char, TokenID &theId, int &mIt)
 	theId = it->second;
 
 	/*if(theId == kToken_NUMBER)
-	    theId = kToken_NUMBER32; //todo: debate whether or not this is good??*/ //also token.h already takes car of this...
+		theId = kToken_NUMBER32; //todo: debate whether or not this is good??*/ //also token.h already takes car of this...
 	return true;
 
 
@@ -195,9 +195,9 @@ Lexer::fetchTokenPtr()
 				commentBegin->addChar(c1Char);
 			}
 		}
-        commentBegin->type = c1 == "\0" ? kToken_EOF : kToken_COMMENT;
+		commentBegin->type = c1 == "\0" ? kToken_EOF : kToken_COMMENT;
 		if(c1 == "\0")
-		    return commentBegin;
+			return commentBegin;
 	}
 
 	Token *theToken = new Token;
@@ -241,17 +241,17 @@ Lexer::fetchTokenPtr()
 
 	if(isIdentifierChar(c1, true))
 	{
-        //getCharPackage();
+		//getCharPackage();
 		if(isIdentifierChar(myScanner->lookAhead(1)))
-        {
+		{
 			getCharPackage();
-            while(isIdentifierChar(myScanner->lookAhead(1)))
-            {
-                theToken->addChar(c1Char);
-                getCharPackage();
-            }
-            theToken->addChar(c1Char);
-        }
+			while(isIdentifierChar(myScanner->lookAhead(1)))
+			{
+				theToken->addChar(c1Char);
+				getCharPackage();
+			}
+			theToken->addChar(c1Char);
+		}
 		if (theToken->cargo == "true" || theToken->cargo == "false")
 		{
 			theToken->cat = kCat_VALUE;
@@ -294,19 +294,19 @@ Lexer::fetchTokenPtr()
 
 	if(c1 == "\"")
 	{
-        //todo: account for all escape codes...
+		//todo: account for all escape codes...
 		getCharPackage();
 		if(c1 != "\"")
 		{
-            if(c1 == "\\")
-            {
-                getCharPackage();
-                if(c1 == "n")
-                {
-                    c1Char->cargo = "\n";
-                }
-            }
-            theToken->charPass(c1Char);
+			if(c1 == "\\")
+			{
+				getCharPackage();
+				if(c1 == "n")
+				{
+					c1Char->cargo = "\n";
+				}
+			}
+			theToken->charPass(c1Char);
 		}
 		getCharPackage();
 		while(c1 != "\"")
@@ -373,9 +373,9 @@ Lexer::lex()
 			error(1, "Unknown Character at ^1^:^2^ == ^0^", false,  theToken);
 		}
 		if(theToken->type != kToken_COMMENT)
-        {
-            theV->push_back(theToken);
-        }
+		{
+			theV->push_back(theToken);
+		}
 	}
 }
 
@@ -426,7 +426,7 @@ printTokenArray(vector<Token*> *v)
 			}
 			else
 			{
-			    msg += "\n  WHAT IS THIS?: " + theToken->cargo;
+				msg += "\n  WHAT IS THIS?: " + theToken->cargo;
 			}
 		}
 		else if (theToken->cat == kCat_VALUE)
@@ -455,7 +455,7 @@ printTokenArray(vector<Token*> *v)
 		}
 		else if(theToken->cat == kCat_IDENTIFIER)
 		{
-		        msg += "\n     IDENTIFIER: " + theToken->cargo;
+				msg += "\n     IDENTIFIER: " + theToken->cargo;
 		}
 		else if (theToken->cat == kCat_EOS)
 		{
@@ -470,11 +470,11 @@ printTokenArray(vector<Token*> *v)
 		}
 		else if(theToken->cat == kCat_OPERATOR)
 		{
-		        msg += "\n       OPERATOR: " + theToken->cargo;
+				msg += "\n       OPERATOR: " + theToken->cargo;
 		}
 		else
 		{
-		        msg += "\n    NO CATEGORY: " + theToken->cargo;
+				msg += "\n    NO CATEGORY: " + theToken->cargo;
 		}
 	}
 	return msg;
