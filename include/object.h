@@ -9,7 +9,6 @@ typedef enum
   p16 = 16,
   p32 = 32,
   p64 = 64,
-  p128 = 128,
   pFp = 256
 } Precision;
 
@@ -20,7 +19,8 @@ typedef enum
   vType_BOOL,
   vType_STR,
   vType_PTR,
-  vType_UNSET
+  vType_UNSET,
+  vType_TYPENAME
 } ValType;
 
 
@@ -30,7 +30,7 @@ public:
   Variant();
   ~Variant();
   ValType mType;
-  ValType dataType; //for the ptr
+  ValType dataType; //for ptr and typename
   Precision mPrec;
   int8_t num8;
   int16_t num16;

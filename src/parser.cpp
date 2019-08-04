@@ -611,6 +611,10 @@ Parser::doParseOnFunc(FuncStatement *theFunc, vector<Identifier*> theNames)
 					
 					refrencing->mValue = theValue;
 				}
+				else if(tokenLookahead(1)->type == kToken_PLUS_EQUALS)
+				{
+					//Val
+				}
 
 
 

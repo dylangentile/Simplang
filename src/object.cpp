@@ -15,7 +15,7 @@ Variant::Variant()
 	mstring = "";
 	mbool = false;
 	mptr = (void*)0;
-	
+
 }
 
 Variant::~Variant()
@@ -40,8 +40,6 @@ Variant::cast(ValType toWhat, Precision thePrec)
 				break;
 				case p64: mPrec = p64; num64 = (int64_t)num8;
 				break;
-				case p128: //do nothing
-				break;
 				case pFp: mPrec = pFp; numfp = (long double)num8;
 				break;
 			}
@@ -54,8 +52,6 @@ Variant::cast(ValType toWhat, Precision thePrec)
 				case p32: mPrec = p32; num32 = (int32_t)num16;
 				break;
 				case p64: mPrec = p64; num64 = (int64_t)num16;
-				break;
-				case p128: //do nothing
 				break;
 				case pFp: mPrec = pFp; numfp = (long double)num16;
 				break;
@@ -70,8 +66,6 @@ Variant::cast(ValType toWhat, Precision thePrec)
 				break;
 				case p64: mPrec = p64; num64 = (int64_t)num32;
 				break;
-				case p128: //do nothing
-				break;
 				case pFp: mPrec = pFp; numfp = (long double)num32;
 				break;
 			}
@@ -85,13 +79,9 @@ Variant::cast(ValType toWhat, Precision thePrec)
 				break;
 				case p64: mPrec = p64; num64 = (int64_t)num64;
 				break;
-				case p128: //do nothing
-				break;
 				case pFp: mPrec = pFp; numfp = (long double)num64;
 				break;
 			}
-			break;
-			case p128: //do nothing
 			break;
 			case pFp: switch(thePrec){
 				case p8: mPrec = p8; num8 = (int8_t)numfp;
@@ -101,8 +91,6 @@ Variant::cast(ValType toWhat, Precision thePrec)
 				case p32: mPrec = p32; num32 = (int32_t)numfp;
 				break;
 				case p64: mPrec = p64; num64 = (int64_t)numfp;
-				break;
-				case p128: //do nothing
 				break;
 				case pFp: mPrec = pFp; numfp = (long double)numfp;
 				break;
@@ -125,8 +113,6 @@ Variant::cast(ValType toWhat, Precision thePrec)
 				break;
 				case p64: mbool = (num64 != 0);
 				break;
-				case p128: mbool = (1 != 0);
-				break;
 				case pFp: mbool = (numfp != 0.0);
 				break;
 			}
@@ -143,8 +129,6 @@ Variant::cast(ValType toWhat, Precision thePrec)
 				case p32: mstring = to_string(num32);
 				break;
 				case p64: mstring = to_string(num64);
-				break;
-				case p128: mstring = "num128 is unsupported!";
 				break;
 				case pFp: mstring = to_string(numfp);
 				break;
@@ -163,11 +147,13 @@ Variant::cast(ValType toWhat, Precision thePrec)
 				break;
 				case p64: mptr = (void*)num64;
 				break;
-				case p128: //do nothing
-				break;
-				case pFp: error(7, "cannot cast double to pointer!");
+				case pFp: error(7, "cannot cast long double to pointer!");
 				break;
 			}
+		}
+		else
+		{
+			error(7, "cannot cast num to object!");
 		}
 	}
 	else if(mType == vType_BOOL)
@@ -195,6 +181,17 @@ Variant::cast(ValType toWhat, Precision thePrec)
 
 			cast(vType_NUM, thePrec);
 		}
+		else
+		{
+			if(toWhat == vType_TYPENAME)
+			{
+				error(7, "cannot cast bool to typename!");
+			}
+			else
+			{
+			error(7, "cannot cast bool to object!");
+			}
+		}
 	}
 	else if(mType == vType_STR)
 	{
@@ -212,8 +209,6 @@ Variant::cast(ValType toWhat, Precision thePrec)
 				break;
 				case p64: num64 = (int64_t)stoll(mstring);
 				break;
-				case p128: //do nothing
-				break;
 				case pFp: numfp = (long double)stold(mstring);
 				break;
 			}
@@ -230,6 +225,25 @@ Variant::cast(ValType toWhat, Precision thePrec)
 		{
 			error(7, "cannot cast string to pointer!");
 		}
+		else if(toWhat == vType_TYPENAME)
+		{
+			error(7, "cannot cast string to typename!");
+		}
+		else 
+		{
+			error(7, "cannot cast string to object!");
+		}
+	}
+	else if(mType == vType_TYPENAME)
+	{
+		if(toWhat == vType_STR)
+		{
+			
+		}
+		else
+		{
+			error(7, "cannot cast typename to non-string!");
+		}
 	}
 }
 
@@ -241,8 +255,6 @@ break;
 case p32:
 break;
 case p64:
-break;
-case p128:
 break;
 case pFp:
 break;

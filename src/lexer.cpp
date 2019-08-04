@@ -420,6 +420,10 @@ printTokenArray(vector<Token*> *v)
 			{
 				msg += "\n NUMBER64(TYPE): " + theToken->cargo;
 			}
+			else if(theToken->type == kToken_DYNAMIC)
+			{
+				msg += "\n  DYNAMIC(TYPE): " + theToken->cargo;
+			}
 			else if (theToken->type == kToken_UNKNOWN)
 			{
 				msg += "\n  UNKNOWN(TYPE): " + theToken->cargo;
