@@ -1,6 +1,6 @@
 # TODO LIST:
 ### REQUIRED FUNCTIONALITY:
-- Compound assignment operators: FALSE
+- Compound assignment operators: TRUE
 - Conditional Stuff: FALSE
 - Set `num` to fp or 64: FALSE
 - Recursion: FALSE
