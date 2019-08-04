@@ -76,23 +76,6 @@ It's still up to debate but for now there are no global/static variables.
 - `shiftr` same as C's `>>`. Bitwise right shift
 
 
-
-
-
-
-
-### Expression Evaluation:
-Operator Precedence Parsing converts from infix notation to a pseudo postfix(reverse polish) notation.
-This notation is evaluated by going from left to right, until you hit the first binary operator.
- Then you perform that operator upon the previous two terms. Then you keep going. Use flag `--pf` to print postfix notation of all statements as they're being parsed.
-
-
-Notes:
-
-https://en.wikipedia.org/wiki/Operator-precedence_parser
-https://llvm.org/docs/tutorial/index.html
-
-
 ### Notes:
 
 ##### On Templates/Typing:
@@ -124,8 +107,17 @@ I'm debating implementing a `var` type. I really don't want to. I really can't t
 ##### On Pointers:
 Why do pointers with the keyword `ptr`, and use `@` for pointer indirection. On the former:I think that the C-style way of doing it is fine, but I like how this reads better, and I'd also like to treat pointers more like a specific type. That is, in C, when I write `int* x, y, z;`, `x` will be a pointer but `y` and `z` will not. I'd rather have `int*` be the type, and therefore `x`,`y`, and `z` all become pointers. Therefore in Simplang `ptr num32 x, y, z;` will make `x`,`y`, and `z` all pointers. I also think that using the ptr keyword disambiguates the definiton of `*` by having it not do double duty. Which leads right into my next point: `*` means both multiplication, and pointer indirection. I'd rather it just mean one. I also think that the `@` sign is the perfect replacement, since we all call it the 'at' sign, learning and understanding the code will be easier, since one can say, 'what's <i>at</i>i> this memory location'. Also, the at symbol isn't used in any other useful programming languages, therefore there's no need to worry about a prexisting meaning. (unless you come from Objective-C. I pity you then.)
 
+##### On Garbage:
+This language will be garbage collected. If it's to be high level and modern, it needs to cleanup after itself. This is to decrease developer suicide rates due to memory leaks, and give the Valgrind team a break. Maybe I'll just have the target platforms be [missiles](https://groups.google.com/forum/message/raw?msg=comp.lang.ada/E9bNCvDQ12k/1tezW24ZxdAJ). The first step is for me to learn how to best pick up the garbage. Luckily I've got the [authoritative handbook](http://gchandbook.org/).
+
 ##### Including files:
 I have zero ideas. Perhaps header files that declare header files. Therefore you declare things twice...? ;)
+
+#####  On Expression Evaluation:
+Operator Precedence Parsing converts from infix notation to a pseudo postfix(reverse polish) notation.
+This notation is evaluated by going from left to right, until you hit the first binary operator.
+Then you perform that operator upon the previous two terms. Then you keep going. 
+
 
 ### Formatting:
 All formating should be in the ALLMAN format. Emphasis on <i>should</i>. I'm a little bit of a hypocrite so hopefully most of my code follows it. Please don't submit pull requests to fix it. I'll worry about that later.
