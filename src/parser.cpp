@@ -599,22 +599,56 @@ Parser::doParseOnFunc(FuncStatement *theFunc, vector<Identifier*> theNames)
 			if(refrencing != nullptr)
 			{
 				//todo check for function
-				if(tokenLookahead(1)->type == kToken_EQUALS)
+				ValueRefrenceStatement* theref = new ValueRefrenceStatement;
+				theref->refName = currentToken;
+				ExpressionStatement* theValue;
+				Token* theOperator = tokenLookahead(1);
+				fetchToken(2);
+				theValue = parseExpression(theNames, refrencing->mType);
+				
+				
+
+
+				if(	theOperator->type == kToken_PLUS_EQUALS 	|| 
+					theOperator->type == kToken_MINUS_EQUALS 	|| 
+					theOperator->type == kToken_MULTIPLY_EQUALS || 
+					theOperator->type == kToken_DIVIDE_EQUALS 	|| 
+					theOperator->type == kToken_POWER_EQUALS 	|| 
+					theOperator->type == kToken_MOD_EQUALS
+				)
 				{
-					ValueRefrenceStatement* theref = new ValueRefrenceStatement;
-					theref->refName = currentToken;
-					ExpressionStatement* theValue;
-					fetchToken(2);
-					theValue = parseExpression(theNames, refrencing->mType);
-					theref->mExpr = theValue;
-					theFunc->mStatementArray.push_back(theref);
+					BinExpressionStatement* theBinExpr = dynamic_cast<BinExpressionStatement*>(theValue);
+					ValueRefrenceStatement* anotherRef = new ValueRefrenceStatement;
+					anotherRef->refName = theref->refName;
 					
-					refrencing->mValue = theValue;
+					OperatorStatement* myOp = new OperatorStatement;
+					switch(theOperator->type)
+					{
+						case kToken_PLUS_EQUALS: myOp->mValue = kToken_ADD;
+						break;
+						case kToken_MINUS_EQUALS: myOp->mValue = kToken_SUBTRACT;
+						break;
+						case kToken_MULTIPLY_EQUALS: myOp->mValue = kToken_MULTIPLY;
+						break;
+						case kToken_DIVIDE_EQUALS: myOp->mValue = kToken_DIVIDE;
+						break;
+						case kToken_POWER_EQUALS: myOp->mValue = kToken_POWER;
+						break;
+						case kToken_MOD_EQUALS: myOp->mValue = kToken_MODULO;
+						break;
+						
+					}
+					
+					myOp->ogToken = theOperator;					
+					theBinExpr->mTermVector.insert(theBinExpr->mTermVector.begin(), anotherRef);
+					theBinExpr->mTermVector.push_back(myOp);
+
+					theValue = dynamic_cast<ExpressionStatement*>(theBinExpr);
 				}
-				else if(tokenLookahead(1)->type == kToken_PLUS_EQUALS)
-				{
-					//Val
-				}
+
+				theref->mExpr = theValue;
+				theFunc->mStatementArray.push_back(theref);
+				refrencing->mValue = theValue;
 
 
 

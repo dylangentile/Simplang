@@ -7,7 +7,7 @@
 - Functions: FALSE 
 - Pointers: FALSE
 - Now that you've got pointers, you need to clean their memory up: COLLECTED GARBAGE: FALSE
-- make a descision about oop vs psuedo-functional(I like state, it keeps things interesting). Probably pull a bjarne and do both: FALSE
+- make a descision about oop vs psuedo-functional(I like state, it keeps things interesting). Probably pull a bjarne and do both(works for python too): FALSE
 - Multiple files plz: FALSE
 - Make it compile: FALSE
 
