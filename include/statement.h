@@ -21,6 +21,9 @@ typedef enum
   kState_VALUE,
   kState_VAR_PH,
   kState_SPEC_FUNC,
+  kState_IF,
+  kState_ELIF,
+  kState_ELSE,
   kState_VALUE_REFRENCE
 }StatementID;
 
@@ -37,7 +40,7 @@ public:
 	Statement() = default;
 	virtual ~Statement() = default;
 	virtual std::string print() = 0;
-	virtual bool compareName(const std::string &theName) = 0;
+	virtual bool compareName(const std::string &theName){ return false; }
 	virtual StatementID fetchId() = 0;
 	//StatementID mId;
 };
@@ -46,7 +49,7 @@ class FuncStatement : public Statement
 {
 public:
 	FuncStatement() {mId = kState_FUNC;}
-	~FuncStatement() = default;
+	~FuncStatement() {delete mType;}
 	std::string mName;
 	Token* mType;
 	std::vector<Statement*> mStatementArray;
@@ -72,11 +75,9 @@ public:
     StatementID fetchId(){return mId;}
 
 
-
-
-
-
 };
+
+
 
 class SpecializedFunctionCall : public Statement
 {
@@ -142,6 +143,20 @@ public:
 
 
 
+};
+
+class IfStatement : public Statement
+{
+public:
+	IfStatement();
+	IfStatement(StatementID whoAmI);
+	~IfStatement();
+	std::string print();
+	StatementID mId;
+	StatementID fetchId();
+
+	std::vector<Statement*> ifBody;
+	ExpressionStatement* condition;
 };
 
 

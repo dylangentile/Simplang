@@ -1,4 +1,7 @@
 # TODO LIST:
+### Bugfixes
+The Compiler Leaks memory... :(
+
 ### REQUIRED FUNCTIONALITY:
 - Compound assignment operators: TRUE
 - Conditional Stuff: FALSE
@@ -20,5 +23,5 @@
 - Routines/workers/tasks instead of objects: FALSE
 - Threading: FALSE
 - Neworking: FALSE
-- Vulkan wrapper: FALSe
+- Vulkan wrapper: FALSE
 - linkage with c-style libs: FALSE

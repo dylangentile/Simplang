@@ -11,6 +11,7 @@ public:
 	bool printValues;
 	bool printWarnings;
 	bool printTokens;
+	bool printTree;
 	bool hush;
 };
 

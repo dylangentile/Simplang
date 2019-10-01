@@ -2,10 +2,40 @@
 
 using namespace std;
 
+IfStatement::IfStatement() : mId(kState_IF)
+{
+
+}
+
+IfStatement::IfStatement(StatementID whoAmI) : mId(whoAmI)
+{
+
+}
+
+
+IfStatement::~IfStatement()
+{
+
+}
+
+string
+IfStatement::print()
+{
+	return string("if statement!\n");
+}
+
+
+StatementID
+IfStatement::fetchId()
+{
+	return mId;
+}
+
+
 VarStatement::VarStatement()
 {
-    mValue = nullptr;
-    mId = kState_VAR;
+	mValue = nullptr;
+	mId = kState_VAR;
 }
 
 
@@ -14,21 +44,21 @@ VarStatement::VarStatement()
 string
 VarStatement::print()
 {
-    string msg = mType->cargo + ": " + mName + "= ";
+	string msg = mType->cargo + ": " + mName + "= ";
 
-    
-    if(mValue != nullptr)
-        msg += mValue->print();
-    else
-        msg += "uninitialized";
+	
+	if(mValue != nullptr)
+		msg += mValue->print();
+	else
+		msg += "uninitialized";
 
-    return msg + "\n";
+	return msg + "\n";
 }
 
 bool
 VarStatement::compareName(const string &theName)
 {
-    return mName == theName;
+	return mName == theName;
 }
 
 
@@ -53,8 +83,8 @@ FuncStatement::print()
 	
 	for(auto it = mStatementArray.begin(); it != mStatementArray.end(); ++it)
 	{
-	    Statement *temp = *it;
-	    msg += temp->print();
+		Statement *temp = *it;
+		msg += temp->print();
 	}
 	return msg;
 
@@ -63,48 +93,48 @@ FuncStatement::print()
 bool
 FuncStatement::compareName(const string &theName)
 {
-    bool ret = false;
-    for(auto it = mStatementArray.begin(); it != mStatementArray.end(); ++it)
+	bool ret = false;
+	for(auto it = mStatementArray.begin(); it != mStatementArray.end(); ++it)
 	{
-	    Statement *temp = *it;
-	    bool x = temp->compareName(theName);
-	    if(x)
-	        ret = true;
-	    break;
+		Statement *temp = *it;
+		bool x = temp->compareName(theName);
+		if(x)
+			ret = true;
+		break;
 	}
-    return ret;
-    
+	return ret;
+	
 }
 
 /*bool
 ExpressionStatement::compareName(const std::string &theName)
 {
-    return false;
+	return false;
 }*/
 
 string
 ExpressionStatement::print()
 {
-    string msg = "";
-    //todo: format
-    for(auto it = mTermVector.begin(); it != mTermVector.end(); ++it)
-    {
-        msg += (*it)->print() + " ";
-    }
-    return msg;
+	string msg = "";
+	//todo: format
+	for(auto it = mTermVector.begin(); it != mTermVector.end(); ++it)
+	{
+		msg += (*it)->print() + " ";
+	}
+	return msg;
 }
 
 
 string
 BinExpressionStatement::print()
 {
-    string msg = "";
-    //todo: format
-    for(auto it = mTermVector.begin(); it != mTermVector.end(); ++it)
-    {
-        msg += (*it)->print() + " ";
-    }
-    return msg;
+	string msg = "";
+	//todo: format
+	for(auto it = mTermVector.begin(); it != mTermVector.end(); ++it)
+	{
+		msg += (*it)->print() + " ";
+	}
+	return msg;
 }
 
 string
@@ -159,13 +189,13 @@ OperatorStatement::insertOp(Token* x)
 string
 VariantPlaceHolder::print()
 {
-	return std::string("VariantPlaceHolder");
+	return std::string("VariantPlaceHolder\n");
 }
 
 string
 SpecializedFunctionCall::print()
 {
-	return std::string("SpecializedFunctionCall");
+	return std::string("SpecializedFunctionCall\n");
 }
 
 

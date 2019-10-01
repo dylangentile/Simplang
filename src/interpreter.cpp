@@ -370,19 +370,36 @@ Interpreter::EvaluateBinExpr(Variant* dest, BinExpressionStatement* theExpr)
 	{
 		
 		ans = *(dynamic_cast<VariantPlaceHolder*>(exprVector[0]))->mVar;
+		delete exprVector[0];
 
 	}
 	else if(exprVector[0]->fetchId() == kState_VALUE)
 	{
 		
 		ans = ValState_to_Variant(*dynamic_cast<ValueStatement*>(exprVector[0]));
+		delete exprVector[0];
 		
 	}
+    else if(exprVector[0]->fetchId() == kState_VALUE_REFRENCE)
+    {
+        ValueRefrenceStatement* valRef = dynamic_cast<ValueRefrenceStatement*>(exprVector[0]);
+        Variant* theVariant = findVariant(valRef->refName->cargo);
+        ans = *theVariant;
+    }
 
-	if(ans.mType != dest->mType || ans.mPrec != dest->mPrec)
+
+	if(dest->mType != vType_UNSET)
 	{
-		ans.cast(dest->mType, dest->mPrec);
+		if(dest->mType == vType_BOOL && ans.mType != vType_BOOL)
+		{
+			ans.mType = vType_BOOL;
+		}
+		else if(ans.mType != dest->mType || ans.mPrec != dest->mPrec)
+		{
+			ans.cast(dest->mType, dest->mPrec);
+		}
 	}
+
 	*dest = ans;
 }
 
@@ -398,6 +415,47 @@ Interpreter::findVariant(string name, StackFrame* theFrame)
 
 	return finder->second;
 }
+
+
+void 
+Interpreter::printVariant(Variant* printedOne)
+{
+	if(printedOne == nullptr)
+	{
+		error(7, "Runtime error! Printing non-existent variable/value!\n P.S.(The parser failed to find this! You should never see this error!)", true);
+	}
+	else if(printedOne->mType == vType_NUM)
+	{
+		switch(printedOne->mPrec){
+			case p8: cout << printedOne->num8;
+				break;
+			case p16: cout << printedOne->num16;
+				break;
+			case p32: cout << printedOne->num32;
+				break;
+			case p64: cout << printedOne->num64;
+				break;
+			case pFp: cout << printedOne->numfp;
+				break;
+		}
+	}
+	else if(printedOne->mType == vType_BOOL)
+	{
+		if(printedOne->mbool)
+		{
+			cout << "true";
+		}
+		else
+		{
+			cout << "false";
+		}
+	}
+	else if(printedOne->mType == vType_STR)
+	{
+		cout << printedOne->mstring;
+	}
+}
+
 
 void 
 Interpreter::doPrint(vector<Statement*> args, StackFrame* theFrame)
@@ -420,45 +478,54 @@ Interpreter::doPrint(vector<Statement*> args, StackFrame* theFrame)
 				*printedOne = ValState_to_Variant(*myVal);
 			}
 
-			if(printedOne == nullptr)
-			{
-				error(7, "Runtime error! Printing non-existent variable/value!\n P.S.(The parser failed to find this! You should never see this error!)", true);
-			}
-			else if(printedOne->mType == vType_NUM)
-			{
-				switch(printedOne->mPrec){
-					case p8: cout << printedOne->num8;
-						break;
-					case p16: cout << printedOne->num16;
-						break;
-					case p32: cout << printedOne->num32;
-						break;
-					case p64: cout << printedOne->num64;
-						break;
-					case pFp: cout << printedOne->numfp;
-						break;
-				}
-			}
-			else if(printedOne->mType == vType_BOOL)
-			{
-				if(printedOne->mbool)
-				{
-					cout << "true";
-				}
-				else
-				{
-					cout << "false";
-				}
-			}
-			else if(printedOne->mType == vType_STR)
-			{
-				cout << printedOne->mstring;
-			}
+			printVariant(printedOne);
+			delete printedOne;
 			
 
 		}
+		else if((*it)->fetchId() == kState_BINEXPR)
+		{
+			Variant *ans = new Variant;
+			BinExpressionStatement* theExpr = dynamic_cast<BinExpressionStatement*>(*it);
+			EvaluateBinExpr(ans, theExpr);
+			printVariant(ans);
+			delete ans;
+		}
+
+		delete *it;
 	}
+	args.clear();
 }
+
+void 
+EvaluateIf(vector<Statement*>& ifs, Statement* theElse)
+{
+	/*IfStatement* currentIF = nullptr;
+	for(vector<Statement*>::iterator it = ifs.begin(); it != ifs.end(); ++it)
+	{
+		currentIF = dynamic_cast<IfStatement*>(*it);
+		Variant ret;
+		ret.mType = vType_BOOL;
+
+		EvaluateBinExpr(&ret, dynamic_cast<BinExpressionStatement*>(currentIF->condition));
+
+		if(ret.mbool)
+		{
+			break;
+		}
+		
+		currentIF = nullptr;
+
+
+	}
+
+	if(currentIF != nullptr)
+	{
+		Interpreter* nextEpisode = new Interpreter(nullptr);
+
+	}*/
+}
+
 
 void
 Interpreter::interpret()
@@ -466,7 +533,7 @@ Interpreter::interpret()
 
 	StackFrame *theFrame = new StackFrame;
 	sfStack.push(theFrame);
-	for(auto currentStatement = gFunc->mStatementArray.begin(); currentStatement != gFunc->mStatementArray.end(); ++currentStatement)
+	for(vector<Statement*>::iterator currentStatement = gFunc->mStatementArray.begin(); currentStatement != gFunc->mStatementArray.end(); ++currentStatement)
 	{
 		if((*currentStatement)->fetchId() == kState_VAR)
 		{
@@ -552,6 +619,38 @@ Interpreter::interpret()
 				}
 			}
 
+		}
+		else if((*currentStatement)->fetchId() == kState_IF)
+		{
+			vector<Statement*> followingTheIf; Statement* theElse = nullptr;
+			followingTheIf.push_back(*currentStatement);
+			while(true)
+			{
+				if(currentStatement + 1 == gFunc->mStatementArray.end())
+					break;
+				else if((*(currentStatement + 1))->fetchId() == kState_ELSE)
+				{
+					theElse = *(currentStatement + 1);
+					break;
+				}
+				else if((*(currentStatement + 1))->fetchId() == kState_ELIF)
+				{
+					followingTheIf.push_back(*(currentStatement + 1));
+					currentStatement++;
+				}
+				else
+					break;
+				
+			}
+
+
+
+			
+
+		}
+		else
+		{
+			//error(7, "unknown statement type!");
 		}
 	}
 

@@ -13,7 +13,7 @@ public:
 	void init(std::string fileName);
 	std::vector<Token*>* lex();
 private:
-	void getCharPackage();
+	void getCharPackage(bool fetchWhitespace = false);
 	Token* fetchTokenPtr();
 	bool isWhitespaceChar(std::string i_char);
 	bool isType(std::string i_char, TokenID &theId, int &mIt);

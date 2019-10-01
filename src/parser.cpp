@@ -29,7 +29,7 @@ Parser::Parser(const string &fileName, bool fVerbose)
 	precedenceMap.insert(make_pair(kToken_GREATER_EQUAL, 5));
 	precedenceMap.insert(make_pair(kToken_NOT_EQUAL, 5));
 	precedenceMap.insert(make_pair(kToken_LOGIC_AND, 4));
-	precedenceMap.insert(make_pair(kToken_LOGIC_OR, 4));
+	precedenceMap.insert(make_pair(kToken_LOGIC_OR, 3));
 
 
 
@@ -98,25 +98,17 @@ Parser::parseFuncArgs(vector<Identifier*> theNames)
 	vector<Statement*> retVec;
 	for(;currentToken->type != kToken_RPAREN; fetchToken())
 	{
-		if(currentToken->cat == kCat_IDENTIFIER)
+		if(currentToken->cat == kCat_IDENTIFIER || currentToken->cat == kCat_VALUE)
 		{
-			Identifier* myId = doesNameNotExist(theNames, currentToken);
-			if(myId != nullptr)
-			{
-				ValueRefrenceStatement* myVar = new ValueRefrenceStatement;
-				myVar->refName = myId->mName;
-				retVec.push_back(dynamic_cast<Statement*>(myVar));
-			}
-			else
-			{
-				error(6, "Passed function arguement '^0^' at ^1^:^2^ that does not exist!", true, currentToken);
-			}
+			ExpressionStatement* myVal;
+			myVal = parseExpression(theNames, kToken_NULL);
+			retVec.push_back(dynamic_cast<Statement*>(myVal));
+            if(currentToken->type == kToken_RPAREN)
+                break;
 		}
 		else if(currentToken->cat == kCat_VALUE)
 		{
-			ValueStatement* myVal = new ValueStatement();
-			myVal->mValue = currentToken;
-			retVec.push_back(dynamic_cast<Statement*>(myVal));
+			
 		}
 		else
 		{
@@ -138,7 +130,7 @@ Parser::parseExpression(vector<Identifier*> theNames, TokenID type)
 
 	Token *lookAhead = tokenLookahead(1);
 
-	if (lookAhead->cat == kCat_OPERATOR || currentToken->type == kToken_LPAREN)
+	if ((lookAhead->cat == kCat_OPERATOR || currentToken->type == kToken_LPAREN) && lookAhead->type != kToken_RPAREN)
 	{
 		BinExpressionStatement* theTerms = nullptr;
 		theTerms = parseBinExpression(theNames, type, nullptr);
@@ -146,11 +138,10 @@ Parser::parseExpression(vector<Identifier*> theNames, TokenID type)
 		return dynamic_cast<ExpressionStatement*>(theTerms);
 
 	}
-	else if(lookAhead->cat == kCat_EOS || lookAhead->type == kToken_COMMA)
+	else if(lookAhead->cat == kCat_EOS || lookAhead->type == kToken_COMMA || lookAhead->type == kToken_RPAREN)
 	{
 		BinExpressionStatement* theTerms = new BinExpressionStatement;
-		ValueStatement* myVal = new ValueStatement;
-		myVal->mValue = currentToken;
+        Statement* myVal = makeBinExprTerm(currentToken);
 		theTerms->mTermVector.push_back(myVal);
 		fetchToken();
 		return dynamic_cast<ExpressionStatement*>(theTerms);
@@ -240,11 +231,10 @@ Parser::parseBinExpression(vector<Identifier*> theNames, TokenID type, Token* pr
 					warning(6, "Uninitialized identifier: '^0^' being passed into expression!", idToken);
 				}
 
-				if(memOf->mType != type)
+				if(memOf->mType != type && type != kToken_NULL)
 				{
 					//todo: should i be this harsh? or should I let it keep going???? Maybe just have some default castings in the interpreter/compiler w/ a warning instead?
-					error(6, "Unmatching types between identifier '^0^' and the type of the expression's assignment!",
-							true, idToken);
+					error(6, "Unmatching types between identifier '^0^' and the type of the expression's assignment!",true, idToken);
 				}
 			}
 		}
@@ -277,7 +267,7 @@ Parser::parseBinExpression(vector<Identifier*> theNames, TokenID type, Token* pr
 					warning(6, "Uninitialized identifier: '^0^' being passed into expression!", nextIdToken);
 				}
 
-				if(memOf->mType != type)
+				if(memOf->mType != type && type != kToken_NULL)
 				{
 					//todo: should i be this harsh? or should I let it keep going???? Maybe just have some default castings in the interpreter/compiler w/ a warning instead?
 					error(6, "Unmatching types between identifier '^0^' and the type of the expression's assignment!",
@@ -295,10 +285,8 @@ Parser::parseBinExpression(vector<Identifier*> theNames, TokenID type, Token* pr
 		{
 			OperatorStatement *theOp = new OperatorStatement;
 			theOp->insertOp(opToken);
-			ValueStatement *theId = new ValueStatement;
-			theId->mValue = idToken;
 			if(idP)
-				theTerms->mTermVector.push_back(theId);
+				theTerms->mTermVector.push_back(makeBinExprTerm(idToken));
 			fetchToken(2);
 			parseBinExpression(theNames, type, nullptr, theTerms);
 			theTerms->mTermVector.push_back(theOp);
@@ -343,7 +331,10 @@ Parser::parseBinExpression(vector<Identifier*> theNames, TokenID type, Token* pr
 
 		if(prevOp == nullptr)
 		{
-
+            if(idToken->type == kToken_RPAREN)
+            {
+                break;
+            }
 			if(getPrecedence(nextOpToken) > getPrecedence(opToken))
 			{
 				if(idP)
@@ -370,13 +361,11 @@ Parser::parseBinExpression(vector<Identifier*> theNames, TokenID type, Token* pr
 				//cout << " " << idToken->cargo << " " << nextIdToken->cargo << " " << opToken->cargo;
 				fetchToken(2);
 			}
-
 		}
 		else
 		{
 			if(getPrecedence(nextOpToken) > getPrecedence(opToken))
 			{
-
 				if(getPrecedence(prevOp) < getPrecedence(opToken))
 				{	
 					if(idP)
@@ -389,8 +378,6 @@ Parser::parseBinExpression(vector<Identifier*> theNames, TokenID type, Token* pr
 			   OperatorStatement *theOp = new OperatorStatement;
 			   theOp->insertOp(opToken);
 			   theTerms->mTermVector.push_back(theOp);
-
-
 			}
 			else
 			{
@@ -426,19 +413,10 @@ Parser::parseBinExpression(vector<Identifier*> theNames, TokenID type, Token* pr
 				}
 				fetchToken(2);
 			}
-
 		}
-
-
 		prevOp = opToken;
-
-
-
 	}
-
-
 	return theTerms;
-
 }
 
 
@@ -541,6 +519,70 @@ Parser::multipleVarInitializations(FuncStatement *theFunc, vector<Identifier*> &
 }
 
 
+
+vector<Statement*> 
+Parser::createScopedStatementVector(vector<Identifier*> theNames)
+{
+
+	
+	if(currentToken->type == kToken_LCURLY)
+	{
+		fetchToken();
+		
+		//todo: you can probably make a function out of this
+		vector<Token*> newTokenArray, *oldTokenArray;
+		
+		int curlys = 1;
+		while(curlys != 0)
+		{
+			if(currentToken->type == kToken_LCURLY)
+			{
+				curlys++;
+			}
+			else if(currentToken->type == kToken_RCURLY)
+			{
+				curlys--;
+			}
+
+			newTokenArray.push_back(currentToken);
+			fetchToken();
+
+		}
+		
+		auto toBeErased = newTokenArray.end() - 1;
+		newTokenArray.erase(toBeErased);
+		
+		vector<Token*>::iterator oldCurrentIterator = currentTokenIterator;
+		oldTokenArray = tokenArray;
+		tokenArray = &newTokenArray; //this should be safe...
+		currentTokenIterator = tokenArray->begin();
+		currentToken = *currentTokenIterator;
+
+		FuncStatement* innerIf = new FuncStatement;
+		innerIf->mName = "innerIf"; //todo: make thisbetter
+		Token* fType = new Token;
+		fType->type == kToken_VOID;
+		innerIf->mType = fType;
+		doParseOnFunc(innerIf, theNames);
+
+		//IfStatement* myIf = new IfStatement();
+		
+
+		tokenArray = oldTokenArray;
+		currentTokenIterator = oldCurrentIterator;
+		currentToken = *currentTokenIterator;
+
+		vector<Statement*> theRet = innerIf->mStatementArray;
+		itAtEnd = false;
+		delete innerIf;
+		return theRet;
+
+	}
+	error(7, "sicko mobamba", true);
+	
+	
+}
+
 void  //NOTE: theNames can't be a refrence because the deeper we go in scoping we don't want to carry junk back out with us.
 Parser::doParseOnFunc(FuncStatement *theFunc, vector<Identifier*> theNames)
 {
@@ -553,7 +595,7 @@ Parser::doParseOnFunc(FuncStatement *theFunc, vector<Identifier*> theNames)
 		if(currentToken->cat == kCat_TYPE && tokenLookahead(1)->cat == kCat_IDENTIFIER)
 		{
 			//are we initializing a variable
-			if(tokenLookahead(2)->type == kToken_EQUALS && tokenLookahead(3)->cat == kCat_VALUE)
+			if(tokenLookahead(2)->type == kToken_EQUALS && (tokenLookahead(3)->cat == kCat_VALUE || tokenLookahead(3)->cat == kCat_IDENTIFIER))
 			{
 				
 				multipleVarInitializations(theFunc, theNames);
@@ -611,7 +653,7 @@ Parser::doParseOnFunc(FuncStatement *theFunc, vector<Identifier*> theNames)
 
 				if(	theOperator->type == kToken_PLUS_EQUALS 	|| 
 					theOperator->type == kToken_MINUS_EQUALS 	|| 
-					theOperator->type == kToken_MULTIPLY_EQUALS || 
+					theOperator->type == kToken_MULTIPLY_EQUALS	|| 
 					theOperator->type == kToken_DIVIDE_EQUALS 	|| 
 					theOperator->type == kToken_POWER_EQUALS 	|| 
 					theOperator->type == kToken_MOD_EQUALS
@@ -679,6 +721,95 @@ Parser::doParseOnFunc(FuncStatement *theFunc, vector<Identifier*> theNames)
 					error(6, "Keyword 'print' followed by unknown token '^0^' at ^1^:^2^. Was expecting '('!", true, tokenLookahead(1));
 				}
 			}
+			else if(currentToken->type == kToken_IF)
+			{
+				fetchToken();
+				if(currentToken->type == kToken_LPAREN)
+				{
+					fetchToken();
+					ExpressionStatement* comparsion = parseExpression(theNames, kToken_NULL);
+					if(currentToken->type != kToken_RPAREN)
+					{
+						//todo: throw error!
+					}
+
+					//fetchToken();
+					if(currentToken->type == kToken_LCURLY)
+					{
+						
+						
+
+						IfStatement* myIf = new IfStatement;
+
+						myIf->ifBody = createScopedStatementVector(theNames);
+						myIf->condition = comparsion;
+						theFunc->mStatementArray.push_back(myIf);
+						continue;
+						//the createScopedStatementVector places currentToken on the token after the closing right curly
+
+					}
+					else
+					{
+						//todo: do only one line.
+					}
+
+
+
+				}
+				else
+				{
+					//todo: this crap
+					//if(currentToken->type == ELSE )
+				}
+			}
+			else if(currentToken->type == kToken_ELSE)
+			{
+				if(theFunc->mStatementArray.back()->fetchId() == kState_IF || theFunc->mStatementArray.back()->fetchId() == kState_ELIF)
+				{
+					fetchToken();
+					if(currentToken->type == kToken_IF)
+					{
+						fetchToken();
+						if(currentToken->type != kToken_LPAREN)
+						{
+							//todo: error
+						}
+						fetchToken();
+						ExpressionStatement* comparsion = parseExpression(theNames, kToken_NULL);
+						
+						if(currentToken->type != kToken_RPAREN)
+						{
+							//todo: throw error
+						}
+						//fetchToken();
+						if(currentToken->type == kToken_LCURLY)
+						{
+							IfStatement* myIf = new IfStatement(kState_ELIF);
+							myIf->condition = comparsion;
+							myIf->ifBody = createScopedStatementVector(theNames);
+							theFunc->mStatementArray.push_back(myIf);
+							continue;
+						}
+						else
+						{
+							//todo; do this weird logic
+						}
+						
+
+
+
+					}
+					else
+					{		
+						IfStatement* myIf = new IfStatement(kState_ELSE);
+
+						myIf->ifBody = createScopedStatementVector(theNames);
+						theFunc->mStatementArray.push_back(myIf);
+						continue;
+					}
+				}
+			}
+
 		}
 		fetchToken();
 	}

@@ -22,10 +22,16 @@ Lexer::Lexer()
 
 
 	keywordMap.insert(make_pair("print", kToken_PRINT));
+	keywordMap.insert(make_pair("if", kToken_IF));
+	keywordMap.insert(make_pair("else", kToken_ELSE));
+
+
 
 	operatorMap.insert(make_pair("=", kToken_EQUALS));
 	operatorMap.insert(make_pair("(", kToken_LPAREN));
 	operatorMap.insert(make_pair(")", kToken_RPAREN));
+	operatorMap.insert(make_pair("{", kToken_LCURLY));
+	operatorMap.insert(make_pair("}", kToken_RCURLY));
 
 	operatorMap.insert(make_pair("+", kToken_ADD));
 	operatorMap.insert(make_pair("-", kToken_SUBTRACT));
@@ -152,14 +158,17 @@ Lexer::init(string fileName)
 }
 
 void
-Lexer::getCharPackage()
+Lexer::getCharPackage(bool fetchWhitespace)
 {
 	c1Char = myScanner->getChar();
 	c1 = c1Char->cargo;
-	while(isWhitespaceChar(c1))
+	if(!fetchWhitespace)
 	{
-		c1Char = myScanner->getChar();
-		c1 = c1Char->cargo;
+		while(isWhitespaceChar(c1))
+		{
+			c1Char = myScanner->getChar();
+			c1 = c1Char->cargo;
+		}
 	}
 	c2 = c1 + myScanner->lookAhead();
 }
@@ -188,16 +197,14 @@ Lexer::fetchTokenPtr()
 		}
 		while(c2 == "//")
 		{
-
 			while(c1 != "\n" && c1 != "\0")
 			{
-				getCharPackage();
+				getCharPackage(true);
 				commentBegin->addChar(c1Char);
 			}
 		}
 		commentBegin->type = c1 == "\0" ? kToken_EOF : kToken_COMMENT;
-		if(c1 == "\0")
-			return commentBegin;
+		return commentBegin;
 	}
 
 	Token *theToken = new Token;
@@ -370,7 +377,7 @@ Lexer::lex()
 		}
 		if(theToken->type == kToken_UNKNOWN)
 		{
-			error(1, "Unknown Character at ^1^:^2^ == ^0^", false,  theToken);
+			error(1, "Unknown Character at ^1^:^2^: ^0^", false,  theToken);
 		}
 		if(theToken->type != kToken_COMMENT)
 		{
@@ -394,7 +401,18 @@ printTokenArray(vector<Token*> *v)
 		{
 			if (theToken->type == kToken_NUMBER)
 			{
-				msg += "\n   NUMBER(TYPE): " + theToken->cargo;
+				if (theToken->subType == kToken_NUMBER8)
+					msg += "\n  NUMBER8(TYPE): " + theToken->cargo;
+				else if (theToken->subType == kToken_NUMBER16)
+					msg += "\n NUMBER16(TYPE): " + theToken->cargo;
+				else if (theToken->subType == kToken_NUMBER32)
+					msg += "\n NUMBER32(TYPE): " + theToken->cargo;
+				else if (theToken->subType == kToken_NUMBER64)
+					msg += "\n NUMBER64(TYPE): " + theToken->cargo;
+				else if(theToken->subType == kToken_NUMBER_FP)
+					msg += "\n NUMBERFP(TYPE): " + theToken->cargo;
+				else
+					msg += "\n   NUMBER(TYPE): " + theToken->cargo;
 			}
 			else if (theToken->type == kToken_BOOL)
 			{
@@ -403,22 +421,6 @@ printTokenArray(vector<Token*> *v)
 			else if (theToken->type == kToken_STRING)
 			{
 				msg += "\n   STRING(TYPE): " + theToken->cargo;
-			}
-			else if (theToken->type == kToken_NUMBER8)
-			{
-				msg += "\n  NUMBER8(TYPE): " + theToken->cargo;
-			}
-			else if (theToken->type == kToken_NUMBER16)
-			{
-				msg += "\n NUMBER16(TYPE): " + theToken->cargo;
-			}
-			else if (theToken->type == kToken_NUMBER32)
-			{
-				msg += "\n NUMBER32(TYPE): " + theToken->cargo;
-			}
-			else if (theToken->type == kToken_NUMBER64)
-			{
-				msg += "\n NUMBER64(TYPE): " + theToken->cargo;
 			}
 			else if(theToken->type == kToken_DYNAMIC)
 			{
@@ -437,11 +439,19 @@ printTokenArray(vector<Token*> *v)
 		{
 			if (theToken->type == kToken_NUMBER)
 			{
-				msg += "\n  NUMBER(VALUE): " + theToken->cargo;
-			}
-			else if (theToken->type == kToken_NUMBER_FP)
-			{
-				msg += "\n NUMBER_FP(VAL): " + theToken->cargo;
+				if (theToken->subType == kToken_NUMBER8)
+					msg += "\n NUMBER8(VALUE): " + theToken->cargo;
+				else if (theToken->subType == kToken_NUMBER16)
+					msg += "\nNUMBER16(VALUE): " + theToken->cargo;
+				else if (theToken->subType == kToken_NUMBER32)
+					msg += "\nNUMBER32(VALUE): " + theToken->cargo;
+				else if (theToken->subType == kToken_NUMBER64)
+					msg += "\nNUMBER64(VALUE): " + theToken->cargo;
+				else if(theToken->subType == kToken_NUMBER_FP)
+					msg += "\nNUMBERFP(VALUE): " + theToken->cargo;
+				else
+					msg += "\n  NUMBER(VALUE): " + theToken->cargo;
+
 			}
 			else if (theToken->type == kToken_BOOL)
 			{

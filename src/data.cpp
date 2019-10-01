@@ -3,16 +3,16 @@
 #include <iostream>
 #include <cstdlib>
 using namespace std;
-#define DEBUG
 
-#ifndef DEBUG
+
+
 #ifndef PACKAGE_STRING
-#error "Not built with autotools!"
+#define PACKAGE_STRING "simplang"
+#warning "You need to specify a package string!"
 #endif
-#else
-#define PACKAGE_STRING "simplang debug build"
-#endif
-Data::Data() : printValues(false), printWarnings(true), printTokens(false), hush(false)
+
+
+Data::Data() : printValues(false), printWarnings(true), printTokens(false), hush(false), printTree(false)
 {
 
 }
@@ -64,6 +64,10 @@ Data::parseArgs(int count, const char *args[])
 				std::cout << PACKAGE_STRING << "\n";
 				exit(0);
 			}
+			else if(*it == "--print-tree")
+			{
+				printTree = true;
+			}
 			else
 			{
 				if((*it)[0] == '-')
@@ -83,6 +87,7 @@ Data::parseArgs(int count, const char *args[])
 		printValues = false;
 		printWarnings = false;
 		printTokens = false;
+		printTree = false;
 	}
 	if(fileVector.empty())
 	{

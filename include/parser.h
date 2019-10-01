@@ -41,6 +41,8 @@ private:
     std::vector<Statement*> parseFuncArgs(std::vector<Identifier*> theNames);
 
 
+    std::vector<Statement*> createScopedStatementVector(std::vector<Identifier*> theNames);
+
 
 private:
   //unsigned whereAmI;

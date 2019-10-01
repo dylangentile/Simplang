@@ -48,6 +48,8 @@ private:
 	Variant* StatementToVariant(Statement* theStatement);
 	Variant ValState_to_Variant(ValueStatement valState);
 	void doPrint(std::vector<Statement*> args, StackFrame* theFrame);
+	void printVariant(Variant* x);
+	void EvaluateIf(std::vector<Statement*>& ifs, Statement* theElse);
 
 
 };
