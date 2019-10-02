@@ -1,5 +1,7 @@
-num64 w = 7, q = 7;
 
+
+num64 w = 7, q = 7;
+/*
 if(q == w)
 {
 	print("yes!");
@@ -12,5 +14,9 @@ else
 {
 	print("no!");
 }
+*/
 
-print("\n");
+print(w, " ", q, "\n");
+
+
+

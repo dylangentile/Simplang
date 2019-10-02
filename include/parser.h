@@ -39,6 +39,7 @@ private:
     Identifier* doesNameNotExist(std::vector<Identifier *> &nameArray, Token *what);
     Statement* makeBinExprTerm(Token* outOfMe);
     std::vector<Statement*> parseFuncArgs(std::vector<Identifier*> theNames);
+    Token* checkValueRefs(BinExpressionStatement* theExpr, std::vector<Identifier*>& theNames);
 
 
     std::vector<Statement*> createScopedStatementVector(std::vector<Identifier*> theNames);

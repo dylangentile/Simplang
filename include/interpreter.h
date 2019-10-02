@@ -5,17 +5,6 @@
 #include <iostream>
 #include <map>
 #include <cstdint>
-/*
-template <typename T>
-class Variant
-{
-public:
-	Variant(T in) { value = in; }
-	~Variant() = default;
-	T value;
-
-};
-*/
 
 
 
@@ -30,26 +19,25 @@ public:
 class Interpreter
 {
 public:
-	Interpreter(FuncStatement* v);
+	Interpreter(FuncStatement* theGlobal/*, std::vector<FuncStatement*>* allFuncs*/);
 	~Interpreter();
 
+	
+
+	void interpret(std::vector<Statement*> statementVector, bool needNewStack = true);
 	void interpret();
+private:
+	std::vector<FuncStatement*> allFunctions;
+	FuncStatement* gFunc;
+	std::stack<StackFrame*> sfStack;
 
 private:
-	FuncStatement *gFunc;
-	std::map<size_t, StatementID> typeHashMatch;
-    //std::map<std::string, uint8_t> nameMap;
-	std::stack<StackFrame*> sfStack;
-	uint8_t currentAddress;
-
-
+	void doPrint(std::vector<Statement*> args, StackFrame* theFrame);
 	Variant* findVariant(std::string name, StackFrame* theFrame = nullptr);
+	void printVariant(Variant* printedOne);
+	Variant ValState_to_Variant(ValueStatement valState);
 	void EvaluateBinExpr(Variant* dest, BinExpressionStatement* theExpr);
 	Variant* StatementToVariant(Statement* theStatement);
-	Variant ValState_to_Variant(ValueStatement valState);
-	void doPrint(std::vector<Statement*> args, StackFrame* theFrame);
-	void printVariant(Variant* x);
-	void EvaluateIf(std::vector<Statement*>& ifs, Statement* theElse);
 
 
 };

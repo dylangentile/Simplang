@@ -121,6 +121,34 @@ Parser::parseFuncArgs(vector<Identifier*> theNames)
 	return retVec;
 }
 
+
+Token*
+Parser::checkValueRefs(BinExpressionStatement* myExpr, vector<Identifier*>& theNames)
+{
+	//if(theExpr->fetchId() == kState_BINEXPR)
+	{
+		//BinExpressionStatement* myExpr = dynamic_cast<BinExpressionStatement*>(theExpr);
+		for(vector<Statement*>::iterator it = myExpr->mTermVector.begin(); it != myExpr->mTermVector.end(); ++it)
+		{
+			Statement* currentStatement = *it;
+
+			if(currentStatement->fetchId() == kState_VALUE_REFRENCE)
+			{
+				ValueRefrenceStatement* valRef = dynamic_cast<ValueRefrenceStatement*>(currentStatement);
+				if(doesNameNotExist(theNames, valRef->refName) == nullptr)
+					return valRef->refName;
+			}
+		}
+	}
+	//else
+	{
+		//return nullptr;
+		//todo: blah blah
+	}
+
+	return nullptr;
+}
+
 ExpressionStatement*
 Parser::parseExpression(vector<Identifier*> theNames, TokenID type)
 {
@@ -135,6 +163,11 @@ Parser::parseExpression(vector<Identifier*> theNames, TokenID type)
 		BinExpressionStatement* theTerms = nullptr;
 		theTerms = parseBinExpression(theNames, type, nullptr);
 		fetchToken(); //go past last value to non operator char.
+		Token* test = checkValueRefs(theTerms, theNames);
+		if(test != nullptr)
+		{
+			error(6, "Undeclared variable '^0^' being using in binary expression.", true, test);
+		}
 		return dynamic_cast<ExpressionStatement*>(theTerms);
 
 	}
@@ -144,6 +177,11 @@ Parser::parseExpression(vector<Identifier*> theNames, TokenID type)
         Statement* myVal = makeBinExprTerm(currentToken);
 		theTerms->mTermVector.push_back(myVal);
 		fetchToken();
+		Token* test = checkValueRefs(theTerms, theNames);
+		if(test != nullptr)
+		{
+			error(6, "Undeclared variable '^0^' being using in binary expression.", true, test);
+		}
 		return dynamic_cast<ExpressionStatement*>(theTerms);
 		
 		
@@ -561,7 +599,7 @@ Parser::createScopedStatementVector(vector<Identifier*> theNames)
 		FuncStatement* innerIf = new FuncStatement;
 		innerIf->mName = "innerIf"; //todo: make thisbetter
 		Token* fType = new Token;
-		fType->type == kToken_VOID;
+		fType->type = kToken_VOID;
 		innerIf->mType = fType;
 		doParseOnFunc(innerIf, theNames);
 

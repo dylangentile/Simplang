@@ -1,28 +1,7 @@
 #include "interpreter.h"
-#include <typeinfo>
+#include <cmath>
 #include <sstream>
-#include <iostream>
-//#include <cmath>
-
 using namespace std;
-
-
-
-template <typename T>
-T dPower(T x, T y)
-{
-	T result = x;
-	if(y == 0)
-	{
-		return 1;
-	}
-	for(size_t i = 0; i < y - 1; ++i)
-	{
-		result *= x;
-	}
-	return result;
-}
-
 
 StackFrame::StackFrame()
 {
@@ -35,19 +14,145 @@ StackFrame::~StackFrame()
 }
 
 
-Interpreter::Interpreter(FuncStatement* v)
+Interpreter::Interpreter(FuncStatement* theGlobal/*, vector<FuncStatement*>* allFuncs*/)
 {
-
-	currentAddress = 0;
-	gFunc = v;
-
+	gFunc = theGlobal;
+	//allFunctions = *allFuncs;
+//will do something with args
 }
 
 Interpreter::~Interpreter()
 {
+	delete gFunc;
+	for(auto it = allFunctions.begin(); it != allFunctions.end(); ++it)
+	{
+		delete *it;
+	}
+
+	while(!sfStack.empty())
+	{
+		delete sfStack.top();
+		sfStack.pop();
+	}
+
 
 }
 
+/******************************************************************************
+
+
+
+
+Printing Utilities
+
+
+
+
+******************************************************************************/
+
+void 
+Interpreter::printVariant(Variant* printedOne)
+{
+	if(printedOne == nullptr)
+	{
+		error(7, "Runtime error! Printing non-existent variable/value!\n P.S.(The parser failed to find this! You should never see this error!)", true);
+	}
+	else if(printedOne->mType == vType_NUM)
+	{
+		switch(printedOne->mPrec){
+			case p8: cout << printedOne->num8;
+				break;
+			case p16: cout << printedOne->num16;
+				break;
+			case p32: cout << printedOne->num32;
+				break;
+			case p64: cout << printedOne->num64;
+				break;
+			case pFp: cout << printedOne->numfp;
+				break;
+		}
+	}
+	else if(printedOne->mType == vType_BOOL)
+	{
+		if(printedOne->mbool)
+		{
+			cout << "true";
+		}
+		else
+		{
+			cout << "false";
+		}
+	}
+	else if(printedOne->mType == vType_STR)
+	{
+		cout << printedOne->mstring;
+	}
+}
+
+void 
+Interpreter::doPrint(vector<Statement*> args, StackFrame* theFrame)
+{
+	for(auto it = args.begin(); it != args.end(); ++it)
+	{
+		if((*it)->fetchId() == kState_VALUE_REFRENCE || (*it)->fetchId() == kState_VALUE)
+		{
+			Variant* printedOne = nullptr;
+			if((*it)->fetchId() == kState_VALUE_REFRENCE)
+			{
+				ValueRefrenceStatement* myVar = dynamic_cast<ValueRefrenceStatement*>(*it);
+				printedOne = findVariant(myVar->refName->cargo, theFrame);
+				
+			}   
+			else
+			{
+				ValueStatement* myVal = dynamic_cast<ValueStatement*>(*it);
+				printedOne = new Variant;
+				*printedOne = ValState_to_Variant(*myVal);
+			}
+
+			printVariant(printedOne);
+			delete printedOne;
+			
+
+		}
+		else if((*it)->fetchId() == kState_BINEXPR)
+		{
+			Variant *ans = new Variant;
+			BinExpressionStatement* theExpr = dynamic_cast<BinExpressionStatement*>(*it);
+			EvaluateBinExpr(ans, theExpr);
+			printVariant(ans);
+			delete ans;
+		}
+
+		delete *it;
+	}
+	args.clear();
+}
+
+/******************************************************************************
+
+
+
+
+Expr/Variant Evaluation
+
+
+
+
+******************************************************************************/
+
+Variant* 
+Interpreter::findVariant(string name, StackFrame* theFrame)
+{
+	if(theFrame == nullptr)
+		theFrame = sfStack.top();
+	
+	auto finder = theFrame->VariantMap.find(name);
+	if(finder == theFrame->VariantMap.end())
+		return nullptr;
+
+	return finder->second;
+}
 
 Variant
 Interpreter::ValState_to_Variant(ValueStatement valState)
@@ -135,7 +240,6 @@ Interpreter::StatementToVariant(Statement* theStatement)
 	return myVariant;
 }
 
-
 void
 Interpreter::EvaluateBinExpr(Variant* dest, BinExpressionStatement* theExpr)
 {
@@ -196,7 +300,7 @@ Interpreter::EvaluateBinExpr(Variant* dest, BinExpressionStatement* theExpr)
 							break;
 							case kToken_MODULO: result->num8 = val2Copy.num8 % val1Copy.num8;
 							break;
-							case kToken_POWER: result->num8 = dPower(val2Copy.num8, val1Copy.num8);
+							case kToken_POWER: result->num8 = pow(val2Copy.num8, val1Copy.num8);
 							break;
 							case kToken_EQUALITY: result->mbool = val2Copy.num8 == val1Copy.num8; result->num8 = (int8_t)result->mbool;
 							break;
@@ -226,7 +330,7 @@ Interpreter::EvaluateBinExpr(Variant* dest, BinExpressionStatement* theExpr)
 							break;
 							case kToken_MODULO: result->num16 = val2Copy.num16 % val1Copy.num16;
 							break;
-							case kToken_POWER: result->num16 = dPower(val2Copy.num16, val1Copy.num16);
+							case kToken_POWER: result->num16 = pow(val2Copy.num16, val1Copy.num16);
 							break;
 							case kToken_EQUALITY: result->mbool = val2Copy.num16 == val1Copy.num16; result->num16 = (int16_t)result->mbool;
 							break;
@@ -256,7 +360,7 @@ Interpreter::EvaluateBinExpr(Variant* dest, BinExpressionStatement* theExpr)
 							break;
 							case kToken_MODULO: result->num32 = val2Copy.num32 % val1Copy.num32;
 							break;
-							case kToken_POWER: result->num32 = dPower(val2Copy.num32, val1Copy.num32);
+							case kToken_POWER: result->num32 = pow(val2Copy.num32, val1Copy.num32);
 							break;
 							case kToken_EQUALITY: result->mbool = val2Copy.num32 == val1Copy.num32; result->num32 = (int32_t)result->mbool;
 							break;
@@ -286,7 +390,7 @@ Interpreter::EvaluateBinExpr(Variant* dest, BinExpressionStatement* theExpr)
 							break;
 							case kToken_MODULO: result->num64 = val2Copy.num64 % val1Copy.num64;
 							break;
-							case kToken_POWER: result->num64 = dPower(val2Copy.num64, val1Copy.num64);
+							case kToken_POWER: result->num64 = pow(val2Copy.num64, val1Copy.num64);
 							break;
 							case kToken_EQUALITY: result->mbool = val2Copy.num64 == val1Copy.num64; result->num64 = (int64_t)result->mbool;
 							break;
@@ -316,7 +420,7 @@ Interpreter::EvaluateBinExpr(Variant* dest, BinExpressionStatement* theExpr)
 							break;
 							case kToken_MODULO: error(6, "modulo cannot be used with numfp", true);
 							break;
-							case kToken_POWER: result->numfp = dPower(val2Copy.numfp, val1Copy.numfp);
+							case kToken_POWER: result->numfp = pow(val2Copy.numfp, val1Copy.numfp);
 							break;
 							case kToken_EQUALITY: result->mbool = val2Copy.numfp == val1Copy.numfp; result->numfp = (long double)result->mbool;
 							break;
@@ -384,6 +488,10 @@ Interpreter::EvaluateBinExpr(Variant* dest, BinExpressionStatement* theExpr)
     {
         ValueRefrenceStatement* valRef = dynamic_cast<ValueRefrenceStatement*>(exprVector[0]);
         Variant* theVariant = findVariant(valRef->refName->cargo);
+        if(theVariant == nullptr)
+        {
+            error(6, "trying to look up non-existent variable '^0^' at ^1^:^2^", true, valRef->refName);
+        }
         ans = *theVariant;
     }
 
@@ -403,142 +511,56 @@ Interpreter::EvaluateBinExpr(Variant* dest, BinExpressionStatement* theExpr)
 	*dest = ans;
 }
 
-Variant* 
-Interpreter::findVariant(string name, StackFrame* theFrame)
-{
-	if(theFrame == nullptr)
-		theFrame = sfStack.top();
-	
-	auto finder = theFrame->VariantMap.find(name);
-	if(finder == theFrame->VariantMap.end())
-		return nullptr;
-
-	return finder->second;
-}
 
 
-void 
-Interpreter::printVariant(Variant* printedOne)
-{
-	if(printedOne == nullptr)
-	{
-		error(7, "Runtime error! Printing non-existent variable/value!\n P.S.(The parser failed to find this! You should never see this error!)", true);
-	}
-	else if(printedOne->mType == vType_NUM)
-	{
-		switch(printedOne->mPrec){
-			case p8: cout << printedOne->num8;
-				break;
-			case p16: cout << printedOne->num16;
-				break;
-			case p32: cout << printedOne->num32;
-				break;
-			case p64: cout << printedOne->num64;
-				break;
-			case pFp: cout << printedOne->numfp;
-				break;
-		}
-	}
-	else if(printedOne->mType == vType_BOOL)
-	{
-		if(printedOne->mbool)
-		{
-			cout << "true";
-		}
-		else
-		{
-			cout << "false";
-		}
-	}
-	else if(printedOne->mType == vType_STR)
-	{
-		cout << printedOne->mstring;
-	}
-}
+
+/******************************************************************************
 
 
-void 
-Interpreter::doPrint(vector<Statement*> args, StackFrame* theFrame)
-{
-	for(auto it = args.begin(); it != args.end(); ++it)
-	{
-		if((*it)->fetchId() == kState_VALUE_REFRENCE || (*it)->fetchId() == kState_VALUE)
-		{
-			Variant* printedOne = nullptr;
-			if((*it)->fetchId() == kState_VALUE_REFRENCE)
-			{
-				ValueRefrenceStatement* myVar = dynamic_cast<ValueRefrenceStatement*>(*it);
-				printedOne = findVariant(myVar->refName->cargo, theFrame);
-				
-			}   
-			else
-			{
-				ValueStatement* myVal = dynamic_cast<ValueStatement*>(*it);
-				printedOne = new Variant;
-				*printedOne = ValState_to_Variant(*myVal);
-			}
-
-			printVariant(printedOne);
-			delete printedOne;
-			
-
-		}
-		else if((*it)->fetchId() == kState_BINEXPR)
-		{
-			Variant *ans = new Variant;
-			BinExpressionStatement* theExpr = dynamic_cast<BinExpressionStatement*>(*it);
-			EvaluateBinExpr(ans, theExpr);
-			printVariant(ans);
-			delete ans;
-		}
-
-		delete *it;
-	}
-	args.clear();
-}
-
-void 
-EvaluateIf(vector<Statement*>& ifs, Statement* theElse)
-{
-	/*IfStatement* currentIF = nullptr;
-	for(vector<Statement*>::iterator it = ifs.begin(); it != ifs.end(); ++it)
-	{
-		currentIF = dynamic_cast<IfStatement*>(*it);
-		Variant ret;
-		ret.mType = vType_BOOL;
-
-		EvaluateBinExpr(&ret, dynamic_cast<BinExpressionStatement*>(currentIF->condition));
-
-		if(ret.mbool)
-		{
-			break;
-		}
-		
-		currentIF = nullptr;
 
 
-	}
+Basic Interpreting
 
-	if(currentIF != nullptr)
-	{
-		Interpreter* nextEpisode = new Interpreter(nullptr);
 
-	}*/
-}
 
+
+******************************************************************************/
 
 void
 Interpreter::interpret()
 {
+	interpret(gFunc->mStatementArray);
+}
 
-	StackFrame *theFrame = new StackFrame;
-	sfStack.push(theFrame);
-	for(vector<Statement*>::iterator currentStatement = gFunc->mStatementArray.begin(); currentStatement != gFunc->mStatementArray.end(); ++currentStatement)
+
+void
+Interpreter::interpret(vector<Statement*> statementVector, bool needNewStack)
+{
+
+	StackFrame* theStack = nullptr;
+	if(needNewStack)
 	{
-		if((*currentStatement)->fetchId() == kState_VAR)
+		theStack = new StackFrame;
+		sfStack.push(theStack);
+	}
+	else
+	{
+		theStack = sfStack.top();
+	}
+	
+	
+
+	for(vector<Statement*>::iterator it = statementVector.begin(); it != statementVector.end(); ++it)
+	{
+		Statement* currentStatement = *it;
+		StatementID theID = currentStatement->fetchId();
+		//take a variable statement and convert it into a variant;
+		if(theID == kState_VAR)
 		{
-			VarStatement* theVar = dynamic_cast<VarStatement*>(*currentStatement);
+			VarStatement* theVar = dynamic_cast<VarStatement*>(currentStatement);
 			Variant* myVariant = new Variant;
+
+			//determine typing
 			if(theVar->mType->type == kToken_NUMBER)
 			{
 				myVariant->mType = vType_NUM;
@@ -570,7 +592,7 @@ Interpreter::interpret()
 			}
 			else if(theVar->mType->type == kToken_OBJECT)
 			{
-
+				//todo: objects...
 			}
 
 
@@ -586,21 +608,19 @@ Interpreter::interpret()
 				EvaluateBinExpr(myVariant, theExpr);
 				
 			}
-			theFrame->VariantMap.insert(make_pair(theVar->mName, myVariant));
-
-
+			theStack->VariantMap.insert(make_pair(theVar->mName, myVariant));
 		}
-		else if((*currentStatement)->fetchId() == kState_SPEC_FUNC)
+		else if(theID == kState_SPEC_FUNC)
 		{
-			SpecializedFunctionCall* mySpecFunc = dynamic_cast<SpecializedFunctionCall*>(*currentStatement);
+			SpecializedFunctionCall* mySpecFunc = dynamic_cast<SpecializedFunctionCall*>(currentStatement);
 			if(mySpecFunc->fId == kFunc_PRINT)
 			{
-				doPrint(mySpecFunc->mArgArray, theFrame);
+				doPrint(mySpecFunc->mArgArray, theStack);
 			}
 		}
-		else if((*currentStatement)->fetchId() == kState_VALUE_REFRENCE)
+		else if(theID == kState_VALUE_REFRENCE)
 		{
-			ValueRefrenceStatement* theRef = dynamic_cast<ValueRefrenceStatement*>(*currentStatement);
+			ValueRefrenceStatement* theRef = dynamic_cast<ValueRefrenceStatement*>(currentStatement);
 			Variant* refrencingMe = findVariant(theRef->refName->cargo);
 			if(refrencingMe == nullptr)
 			{
@@ -620,46 +640,8 @@ Interpreter::interpret()
 			}
 
 		}
-		else if((*currentStatement)->fetchId() == kState_IF)
-		{
-			vector<Statement*> followingTheIf; Statement* theElse = nullptr;
-			followingTheIf.push_back(*currentStatement);
-			while(true)
-			{
-				if(currentStatement + 1 == gFunc->mStatementArray.end())
-					break;
-				else if((*(currentStatement + 1))->fetchId() == kState_ELSE)
-				{
-					theElse = *(currentStatement + 1);
-					break;
-				}
-				else if((*(currentStatement + 1))->fetchId() == kState_ELIF)
-				{
-					followingTheIf.push_back(*(currentStatement + 1));
-					currentStatement++;
-				}
-				else
-					break;
-				
-			}
-
-
-
-			
-
-		}
-		else
-		{
-			//error(7, "unknown statement type!");
-		}
 	}
 
 
-
-
-
 	sfStack.pop();
-
-
 }
-

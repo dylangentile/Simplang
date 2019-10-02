@@ -15,7 +15,6 @@ int main(int argc, const char *argv[])
 {
 	vector<string> allSources = theData.parseArgs(argc, argv);
     string theFile = allSources[0];
-
 	Parser *myParser = new Parser(theFile, !theData.hush);
 	Interpreter* myInterpreter = new Interpreter(myParser->parse());
 

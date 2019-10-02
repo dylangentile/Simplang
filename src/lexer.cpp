@@ -302,12 +302,12 @@ Lexer::fetchTokenPtr()
 	if(c1 == "\"")
 	{
 		//todo: account for all escape codes...
-		getCharPackage();
+		getCharPackage(true);
 		if(c1 != "\"")
 		{
 			if(c1 == "\\")
 			{
-				getCharPackage();
+				getCharPackage(true);
 				if(c1 == "n")
 				{
 					c1Char->cargo = "\n";
@@ -315,23 +315,27 @@ Lexer::fetchTokenPtr()
 			}
 			theToken->charPass(c1Char);
 		}
-		getCharPackage();
+        else
+        {
+            error(6, "empty string declared at ^1^:^2^", true, theToken);
+        }
+		getCharPackage(true);
 		while(c1 != "\"")
 		{
 			if(c1 == "\\")
 			{
-				getCharPackage();
+				getCharPackage(true);
 				if(c1 == "n")
 				{
 					c1Char->cargo = "\n";
 				}
 				theToken->addChar(c1Char);
-				getCharPackage();
+				getCharPackage(true);
 			}
 			else
 			{
 				theToken->addChar(c1Char);
-				getCharPackage();
+				getCharPackage(true);
 			}
 			
 		}

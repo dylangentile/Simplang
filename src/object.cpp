@@ -18,10 +18,18 @@ Variant::Variant()
 
 }
 
+Variant::Variant(const Variant& copyMe)
+{
+	*this = copyMe;
+}
+
+
 Variant::~Variant()
 {
 
 }
+
+
 
 
 void
