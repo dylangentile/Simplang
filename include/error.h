@@ -1,22 +1,38 @@
 #pragma once
 #include "token.h"
-#include <string>
 
-class ErrorData{
+typedef enum
+{
+	kE_Error,
+	kE_Warning,
+	kE_Fatal
+}ErrorType;
+
+
+class ErrorManager
+{
+private:
+	ErrorManager();
+	~ErrorManager();
+	//static void generateWarning(const char* msg);
+	//static void generateError(const char* mesg);
 public:
-	ErrorData(std::string file, bool doColors = true);
-	~ErrorData();
-	std::string msg;
-	std::string srcFile;
-	unsigned errorCount;
-	bool color;
+	//static void logError(ErrorType type, const char* msg, ...);
+	static ErrorManager* create();
+	static void destroy(); 
+	static void logError(ErrorType type, DebugData* location, const char* msg);
+	static bool haveErrors();
+	static std::string report();
+	
+private:
+	static ErrorManager* gErrorManager;
 
+	std::string warnings;
+	std::string errors;
+
+	uint32_t warningCount;
+	uint32_t errorCount;
 };
 
-
-void error(unsigned id = 666, std::string theMsg = "NULL", bool stop = false, Token* mToken = nullptr);
-std::string errorOut();
-void warning(unsigned id = 6, std::string theMsg = "NULL", Token* mToken = nullptr);
-std::string warningOut();
-
-bool isErrors();
+#define lerror(type, location, msg) ErrorManager::logError(type, location, msg);
+#define lwarning(location, msg) ErrorManager::logError(kE_Warning, location, msg);

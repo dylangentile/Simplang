@@ -1,31 +1,19 @@
-#include <iostream>
-#include <vector>
 #include "error.h"
-#include "parser.h"
-#include "interpreter.h"
-#include "data.h"
-
-using namespace std;
-
+#include "lexer.h"
+#include <cstdio>
 
 
 
 
 int main(int argc, const char *argv[])
 {
-	vector<string> allSources = theData.parseArgs(argc, argv);
-    string theFile = allSources[0];
-	Parser *myParser = new Parser(theFile, !theData.hush);
-	Interpreter* myInterpreter = new Interpreter(myParser->parse());
+	ErrorManager::create();
+	
+	Lexer* myLexer = new Lexer(argv[1]);
 
-	if(theData.printValues) cout << "\n\n" << myParser->mLog << "\n\n";
-	if(theData.printWarnings) cout << warningOut() << "\n\n";
-	if(isErrors()) cout << errorOut() << "\n\n\n";
-	else
-	{
-		myInterpreter->interpret();
-	}
 
-   
+	if(ErrorManager::haveErrors())
+		printf("%s\n", ErrorManager::report().c_str());
+	ErrorManager::destroy();
 	return 0;
 }

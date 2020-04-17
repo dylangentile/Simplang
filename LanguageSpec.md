@@ -1,0 +1,2 @@
+# Simplang Language Specification
+
