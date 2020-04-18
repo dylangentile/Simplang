@@ -23,6 +23,7 @@ typedef struct
 
 	DebugData* mData = nullptr;
 	std::string mStr;
+	uint32_t colNum = 0;
 }Token;
 
 

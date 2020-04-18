@@ -1,6 +1,9 @@
 #pragma once
 
 
+
+
+
 typedef enum
 {
 	kCat_NULL = 0,
@@ -9,7 +12,6 @@ typedef enum
 	kCat_WildIdentifier,
 	kCat_Immediate,
 	kCat_Operator,
-	kCat_AssignmentOperator,
 	kCat_LanguageOperator,
 	kCat_BasicType
 
@@ -20,7 +22,7 @@ typedef enum
 	kToken_NULL = 0,
 	kToken_UNKNOWN,
 	
-	
+	kToken_VOID,
 	kToken_STRING,
 	kToken_BYTE,
 	kToken_BOOL,
@@ -52,6 +54,10 @@ typedef enum
 	kToken_WHILE,
 	kToken_MATCH,
 
+	kToken_BREAK,
+	kToken_CONTINUE,
+	kToken_RETURN,
+
 	kToken_ENUM,
 	kToken_STRUCT,
 
@@ -73,6 +79,15 @@ typedef enum
 	kToken_DIVIDE,
 	kToken_MODULO,
 
+	kToken_PLUS_EQUAL,
+	kToken_MINUS_EQUAL,
+	kToken_MULTIPLY_EQUAL,
+	kToken_DIVIDE_EQUAL,
+	kToken_MODULO_EQUAL,
+
+	kToken_INCREMENT,
+	kToken_DECREMENT,
+
 	kToken_LOGIC_EQUAL,
 	kToken_LESS,
 	kToken_GREATER,
@@ -86,8 +101,10 @@ typedef enum
 	kToken_LOGIC_OR,
 
 	kToken_DEREF,
+	kToken_DOT,
 
 	kToken_BIT_AND,
-	kToken_BIT_OR
+	kToken_BIT_OR,
+	kToken_BIT_COMPL
 
 }TokenType;

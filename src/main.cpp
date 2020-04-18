@@ -1,5 +1,5 @@
 #include "error.h"
-#include "lexer.h"
+#include "parser.h"
 #include <cstdio>
 
 
@@ -9,8 +9,8 @@ int main(int argc, const char *argv[])
 {
 	ErrorManager::create();
 	
-	Lexer* myLexer = new Lexer(argv[1]);
-
+	Parser* myParser = new Parser(argv[1]);
+	myParser->parse();
 
 	if(ErrorManager::haveErrors())
 		printf("%s\n", ErrorManager::report().c_str());

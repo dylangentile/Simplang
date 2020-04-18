@@ -20,7 +20,8 @@ public:
 	//static void logError(ErrorType type, const char* msg, ...);
 	static ErrorManager* create();
 	static void destroy(); 
-	static void logError(ErrorType type, DebugData* location, const char* msg);
+	static void logError(ErrorType type, Token* location, const char* msg);
+	//inline static void logError(ErrorType type, Token* token, const char* msg){ logError(type, token->mData, msg);}
 	static bool haveErrors();
 	static std::string report();
 	

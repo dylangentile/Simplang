@@ -16,13 +16,13 @@ public:
 
 private:
 	Token* fetchToken();
-	void fetchChar(char* c1, char* c2);
+	void fetchChar();
 	char c1, c2;
 
 private:
 	std::string mContent;
 	std::string::iterator fileIt;
-
+	uint32_t currentLine = 1, currentCol = 0;
 
 	std::vector<Token*> tokenVec;
 	std::vector<DebugData*> debugDataVec;

@@ -32,7 +32,7 @@ ErrorManager::destroy()
 }
 
 void
-ErrorManager::logError(ErrorType type, DebugData* location, const char* msg)
+ErrorManager::logError(ErrorType type, Token* location, const char* msg)
 {
 	assert(gErrorManager != nullptr && "Need to create the error manager!");
 
@@ -40,11 +40,21 @@ ErrorManager::logError(ErrorType type, DebugData* location, const char* msg)
 
 	if(location != nullptr)
 	{
-		err = "Line #" + std::to_string(location->lineNum) + ": " + std::string(msg) + "\n\t";
-		for(const char* ptr = location->linePtr; *ptr != '\n' && *ptr != '\0'; ptr++)
+		err = "Line #" + std::to_string(location->mData->lineNum) + ": " + std::string(msg) + "\n\t";// + " '" + location->mStr + "'\n\t";
+		const char* ptr = location->mData->linePtr;
+		while(*ptr != 0 && *ptr != '\0' && *ptr != '\n')
 		{
 			err.push_back(*ptr);
+			ptr++;
 		}
+		err += "\n\t";
+		for(int i = 1; i < location->colNum; i++)
+			err.push_back(' ');
+		err.push_back('^');
+
+		for(int i = 1; i < location->mStr.size(); i++)
+			err.push_back('~');
+
 	}
 	else
 	{

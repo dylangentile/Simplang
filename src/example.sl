@@ -1,13 +1,10 @@
 
-struct
+struct MyStruct
 {
-	MyStruct(){}
-	~MyStruct(){}
-
 	uint8 id;
 	int16 value;
 
-} MyStruct;
+};
 
 
 void myStructEditor(MyStruct ptr thingy)
