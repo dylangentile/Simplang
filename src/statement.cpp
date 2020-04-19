@@ -46,7 +46,8 @@ VariableAssignment::~VariableAssignment()
 
 Structure::Structure() : Statement(kState_Structure)
 {
-
+	for(auto it = members.begin(); it != members.end(); it++)
+		delete *it;
 }
 
 Structure::~Structure()

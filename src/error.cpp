@@ -79,7 +79,7 @@ ErrorManager::logError(ErrorType type, Token* location, const char* msg)
 	if(type == kE_Fatal)
 	{
 		printf("%s\n", gErrorManager->report().c_str());
-		abort();
+		exit(0);
 	}
 
 

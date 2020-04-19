@@ -72,6 +72,8 @@ typedef enum
 	kToken_LBRACKET,
 	kToken_RBRACKET,
 
+	kToken_DECLARE_EQUAL,
+
 	kToken_ASSIGN_EQUAL,
 	kToken_PLUS,
 	kToken_MINUS,

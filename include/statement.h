@@ -39,7 +39,7 @@ class Statement
 {
 public:
 	Statement(StatementID id_);
-	~Statement();
+	virtual ~Statement();
 
 	StatementID mId;
 

@@ -12,7 +12,7 @@ int main(int argc, const char *argv[])
 	Parser* myParser = new Parser(argv[1]);
 	myParser->parse();
 
-	if(ErrorManager::haveErrors())
+	//if(ErrorManager::haveErrors())
 		printf("%s\n", ErrorManager::report().c_str());
 	ErrorManager::destroy();
 	//exit(0);

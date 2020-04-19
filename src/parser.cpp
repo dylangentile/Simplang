@@ -128,7 +128,26 @@ Parser::deriveTypeFromToken(Token* theToken)
 		theType = dynamic_cast<Type*>(finder);
 	}
 
+	if(theType == nullptr)
+		lerror(kE_Error, theToken, "Expected Type!");
+
 	return theType;
+}
+
+void 
+Parser::getTypeList(std::vector<Type*>& typeVec)
+{
+	Type* theType = deriveTypeFromToken(currentToken);
+	typeVec.push_back(theType);
+	fetchToken();
+
+	while(currentToken->mType == kToken_COMMA)
+	{
+		fetchToken();
+		theType = deriveTypeFromToken(currentToken);
+		typeVec.push_back(theType);
+		fetchToken();
+	}
 }
 
 
@@ -137,7 +156,7 @@ Parser::deriveTypeFromToken(Token* theToken)
 Statement*
 Parser::parseExpr()
 {
-	return nullptr;
+	
 }
 
 
@@ -175,37 +194,87 @@ Parser::fetchNextVariable(Type* theType)
 
 
 void
-Parser::parseVarDefs()
+Parser::parseVarDefs(std::vector<Type*>* typeArray)
 {
 	ErrorManager::resetCounter();
 
-
-	Type* theType = deriveTypeFromToken(currentToken);
-	//if(theType == nullptr)
-		//do something
-	fetchToken();
-	while(true)
+	std::vector<Type*> rtypeArray;
+	if(typeArray == nullptr)
 	{
-		Variable* theVar = fetchNextVariable(theType);
-		if(theVar == nullptr)
+		getTypeList(rtypeArray);
+		typeArray = &rtypeArray;
+	}
+
+	
+
+	
+
+
+	if(currentToken->mType == kToken_COLON)
+	{
+		fetchToken();
+		for(auto it = typeArray->begin(); it != typeArray->end(); it++)
+		{
+			Variable* theVar = fetchNextVariable(*it);
+			if(theVar == nullptr)
+				break;
+
+			currentScope()->statementVec.push_back(dynamic_cast<Statement*>(theVar));
+			currentScope()->usedNames.insert(theVar->mName);
+
+			if(currentToken->mType == kToken_COMMA)
+			{
+				fetchToken();
+				if(it + 1 == typeArray->end())
+					lerror(kE_Fatal, currentToken, "more variables than types!");
+				continue;
+			}
+
+			if(currentToken->mType == kToken_SEMICOLON)
+			{
+				if(it + 1 != typeArray->end())
+				{
+					lwarning(currentToken, "declared more types than symbols!");
+				}
+				break;
+			}
+
+			lerror(kE_Error, currentToken, "Unknown token in variable declaration(s)!");
 			break;
 
-		scopeStack.back()->statementVec.push_back(dynamic_cast<Statement*>(theVar));
-		scopeStack.back()->usedNames.insert(theVar->mName);
+		}
+	}
+	else
+	{
 
-		if(currentToken->mType == kToken_COMMA)
+		Type* theType = (*typeArray)[0];
+		while(true)
 		{
-			fetchToken();
-			continue;
+			Variable* theVar = fetchNextVariable(theType);
+			if(theVar == nullptr)
+				break;
+
+			scopeStack.back()->statementVec.push_back(dynamic_cast<Statement*>(theVar));
+			scopeStack.back()->usedNames.insert(theVar->mName);
+
+			if(currentToken->mType == kToken_COMMA)
+			{
+				fetchToken();
+				continue;
+			}
+
+			if(currentToken->mType == kToken_SEMICOLON)
+				break;
+
+			lerror(kE_Error, currentToken, "Unknown token in variable declaration(s)!");
+			break;
 		}
 
-		if(currentToken->mType == kToken_SEMICOLON)
-			break;
+		if(typeArray->size() > 1)
+			lerror(kE_Error, currentToken, "Probably missing a semicolon in your declaration!");
+	}
 
-		lerror(kE_Error, currentToken, "Unknown token in variable declaration(s)!");
-		break;
 
-	}	
 
 	if(ErrorManager::gotErrors())
 		lerror(kE_Fatal, nullptr, "failed variable declaration parsing!");
@@ -242,52 +311,7 @@ Parser::parseStruct()
 	
 	Scope temporaryScope;
 	scopeStack.push_back(&temporaryScope);
-	while(true)
-	{
-		
-		Type* theType = deriveTypeFromToken(currentToken);
-		if(theType == nullptr)
-			break;
-		fetchToken();
-		while(true)
-		{
-			Variable* theVar = fetchNextVariable(theType);
-			if(theVar == nullptr)
-				break;
-
-			structTyping->definition->members.push_back(theVar);
-			scopeStack.back()->usedNames.insert(theVar->mName);
-
-			if(currentToken->mType == kToken_COMMA)
-			{
-				fetchToken();
-				continue;
-			}
-
-			if(currentToken->mType == kToken_SEMICOLON)
-			{
-				fetchToken();
-				break;
-			}
-
-			lerror(kE_Fatal, currentToken, "Unknown token in variable declaration(s)!");
-			break;
-		}
-
-	
-		
-		if(currentToken->mType == kToken_RCURLY)
-		{
-			fetchToken();
-			break;
-		}
-
-		
-	}
-
-
-
-
+	parseVarDefs();
 	scopeStack.pop_back();
 
 
@@ -297,7 +321,12 @@ Parser::parseStruct()
 		lerror(kE_Error, currentToken, "Struct definition needs closing semicolon!");
 	fetchToken();
 
-	
+	for(auto it = temporaryScope.statementVec.begin(); it != temporaryScope.statementVec.end(); it++)
+	{
+		if((*it)->mId != kState_Variable)
+			lerror(kE_Error, currentToken, "struct cannot have non variable statements!");
+		structTyping->definition->members.push_back(dynamic_cast<Variable*>(*it));
+	}
 
 	if(ErrorManager::gotErrors())
 	{
@@ -310,6 +339,8 @@ Parser::parseStruct()
 		currentScope()->structDefinitions.insert(it->first, it->second);
 	}
 
+
+
 	currentScope()->statementVec.push_back(dynamic_cast<Statement*>(structTyping->definition));
 	currentScope()->structDefinitions.insert(structTyping, structTyping->name);
 
@@ -317,6 +348,11 @@ Parser::parseStruct()
 
 }
 
+void
+Parser::parseFunction()
+{
+
+}
 
 void
 Parser::parseIntoScope()
@@ -332,13 +368,13 @@ Parser::parseIntoScope()
 		}
 		else if(currentToken->mCat == kCat_BasicType)
 		{
-			if(lookAhead(1)->mType == kToken_COMMA)
-				parseFunction();
+			std::vector<Type*> typeVec;
+			getTypeList(typeVec);
 			
-			if(lookAhead(1)->mCat == kCat_WildIdentifier && lookAhead(2)->mType == kToken_LPAREN)
+			if(currentToken->mCat == kCat_WildIdentifier)
 				parseFunction();
-
-				
+			else if(currentToken->mType == kToken_COLON)
+				parseVarDefs(&typeVec);				
 		}
 
 
@@ -346,7 +382,7 @@ Parser::parseIntoScope()
 
 		if(prevToken == currentToken)
 		{
-			lerror(kE_Error, prevToken, "Unhandled token!");
+			//lerror(kE_Error, prevToken, "Unhandled token!");
 			fetchToken();
 		}
 		prevToken = currentToken;

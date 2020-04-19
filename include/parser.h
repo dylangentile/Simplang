@@ -22,14 +22,19 @@ private:
 	Token* lookAhead(uint32_t offset);
 
 	Type* deriveTypeFromToken(Token* theToken);
+	void getTypeList(std::vector<Type*>& typeVec);
 
 	Statement* parseExpr();
 
 	Variable* fetchNextVariable(Type* theType);
-	void parseVarDefs();
+	void parseVarDefs(std::vector<Type*>* typeArray = nullptr);
 
 
 	void parseStruct();
+	void parseFunction();
+
+
+
 	void parseIntoScope();
 
 	bool checkRedeclaration(const std::string& name, bool doError = true);

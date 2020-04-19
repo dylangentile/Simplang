@@ -1,9 +1,7 @@
 
 struct MyStruct
 {
-	uint8 id;
-	int16 value;
-
+	uint8, int16 : id, value;
 };
 
 
@@ -18,32 +16,55 @@ int, int returnsTwoInts()
 	return 3, 4;
 }
 
+int, string returnsTwoTypes()
+{
+	return 3, "hello!";
+}
+
 int main(string[] argv)
 {
+	//two ways to declare variables:
+	//	c-style
+	int i1, i2 = 4, i3;
+	//	variable-type style
+	int, int, int : i4, i5 = 4, i6;
+	//the above is useful in the examples below
 
-	x, y := returnsTwoInts();
+	//can assign to standard var-declaration list
+	int d1, x1, y1 = returnsTwoInts(); //assigns to x1, y1
+	//int w1, string s1 = returnsTwoTypes(); //error string cannot be used as variable name... etc
+	int, string : w1, s1 = returnsTwoTypes(); //handling multiple types
+	x2, y2 := returnsTwoInts(); // the type is inferred
+	x1, y1 = returnsTwoInts(); // purely assignment, no declaration
+	//x1, y1 := returnsTwoInts(); //error! variable redeclaration!
+
+
 
 	for(arg : argv)
 	{
 
 	}
 
+	//this will also give you an iterator obj
 	for(arg, it : argv)
 	{
 
 	}
 
-	for(int i : 1..argv.size()) //inclusive range with ..=
+	for(int i : 0..argv.size()) //inclusive range with ..=
 	{
 
 	}
 
+	//c-style (declaration; halting condition; increment)
 	for(int i = 0; i < argv.size(); i++)
 	{
 
 	}
 
 	string hello = "hello world";
+	hello2 := "hello world"; //essentially auto hello2 = string('hello world')
+	//note that string immediates in simplang are treated like the string type, not a byte array!
 
 	//array
 	byte[] strbytes = hello.bytes();

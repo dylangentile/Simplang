@@ -68,6 +68,7 @@ Lexer::Lexer(const char* filename)
 	langOperatorMap.insert(kToken_LBRACKET, "[");
 	langOperatorMap.insert(kToken_RBRACKET, "]");
 
+	operatorMap.insert(kToken_DECLARE_EQUAL, ":=");
 
 	operatorMap.insert(kToken_ASSIGN_EQUAL, "=");
 	operatorMap.insert(kToken_PLUS, "+");
@@ -250,37 +251,44 @@ Lexer::fetchToken()
 
 	theToken->mStr = "";
 	theToken->mStr.push_back(c1);
+	theToken->mStr.push_back(c2);
 	TokenType* type = nullptr;
 	
+	if((type = operatorMap[theToken->mStr]) != nullptr)
+	{
+		theToken->mCat = kCat_Operator;
+		theToken->mType = *type;
+		fetchChar();
+		fetchChar();
+		return theToken; 
+	}
+
+	theToken->mStr.erase(theToken->mStr.end() - 1);
+
 	if((type = langOperatorMap[theToken->mStr]) != nullptr)
 	{
 		theToken->mCat = kCat_LanguageOperator;
 		theToken->mType = *type;
 		fetchChar();
+
 		return theToken;
 	}
-
 
 
 	if((type = operatorMap[theToken->mStr]) != nullptr)
 	{
-
-		TokenType* type2 = nullptr;
-		theToken->mStr.push_back(c2);
-		if((type2 = operatorMap[theToken->mStr]) != nullptr)
-		{
-			type = type2;
-			fetchChar();
-		}
-		else
-			theToken->mStr.erase(theToken->mStr.end() - 1);
-
 		theToken->mCat = kCat_Operator;
-		
-		fetchChar();
 		theToken->mType = *type;
-		return theToken;
+		fetchChar();
+
+		return theToken; 
 	}
+
+	
+
+
+
+
 
 	if(c1 == '\"')
 	{
