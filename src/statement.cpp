@@ -23,7 +23,8 @@ Scope::~Scope()
 		delete *it;
 }
 
-Variable::Variable() : Statement(kState_Variable)
+Variable::Variable(const std::string& name, Type* type) 
+	: Statement(kState_Variable), mName(name), mType(type), mInitializer(nullptr)
 {
 
 }

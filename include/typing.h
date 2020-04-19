@@ -55,9 +55,8 @@ public:
 class StructType : public Type
 {
 public:
-	StructType(Structure* def) : 
-		Type(kType_Struct), definition(def) {}
-	~StructType(){}
+	StructType(const std::string& name_, bool defined = true);
+	~StructType();
 	std::string name;
 	Structure* definition;
 };
@@ -65,7 +64,7 @@ public:
 class BasicType : public Type
 {
 public:
-	BasicType() : Type(kType_Basic) {}
+	BasicType(BasicTypeID id) : Type(kType_Basic), basicId(id) {}
 	~BasicType(){}
 	BasicTypeID basicId;
 };
@@ -81,3 +80,6 @@ public:
 	Type* pointsTo;
 
 };
+
+
+

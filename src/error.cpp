@@ -52,7 +52,9 @@ ErrorManager::logError(ErrorType type, Token* location, const char* msg)
 			err.push_back(' ');
 		err.push_back('^');
 
-		for(int i = 1; i < location->mStr.size(); i++)
+		int offset = location->mCat == kCat_Immediate && location->mType == kToken_STRING ? 2 : 0;
+
+		for(int i = 1; i < location->mStr.size() + offset; i++)
 			err.push_back('~');
 
 	}
@@ -100,3 +102,36 @@ ErrorManager::report()
 	retmsg += "slc exited with: " + std::to_string(gErrorManager->warningCount) + " warnings and " + std::to_string(gErrorManager->errorCount) + " errors.";
 	return retmsg;
 }
+
+
+
+
+
+void
+ErrorManager::resetCounter()
+{
+	assert(gErrorManager != nullptr && "Need to create the error manager!");
+	gErrorManager->counter = 0;
+}
+
+bool
+ErrorManager::gotErrors()
+{
+	assert(gErrorManager != nullptr && "Need to create the error manager!");
+	return gErrorManager->counter > 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

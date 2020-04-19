@@ -34,11 +34,18 @@ public:
 		
 		return false;
 	}
-	
-	void* end()
+	/*
+	std::unordered_map<K, T, std::hash<HashK> >::iterator begin()
 	{
-		return nullptr;
+		return map1.begin();
 	}
+
+	std::unordered_map<K, T, std::hash<HashK> >::iterator end()
+	{
+		return map1.end();
+	}*/
+
+
 
 	T* operator[](const K& key)
 	{

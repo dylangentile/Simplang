@@ -24,6 +24,10 @@ public:
 	//inline static void logError(ErrorType type, Token* token, const char* msg){ logError(type, token->mData, msg);}
 	static bool haveErrors();
 	static std::string report();
+
+
+	static void resetCounter();
+	static bool gotErrors();
 	
 private:
 	static ErrorManager* gErrorManager;
@@ -33,7 +37,12 @@ private:
 
 	uint32_t warningCount;
 	uint32_t errorCount;
+
+	uint32_t counter;
 };
 
 #define lerror(type, location, msg) ErrorManager::logError(type, location, msg);
 #define lwarning(location, msg) ErrorManager::logError(kE_Warning, location, msg);
+
+
+

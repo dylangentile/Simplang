@@ -4,7 +4,7 @@
 #include "statement.h"
 #include "bimap.h"
 
-#include <stack>
+#include <deque>
 
 class Parser
 {
@@ -21,17 +21,35 @@ private:
 	Token* fetchToken();
 	Token* lookAhead(uint32_t offset);
 
-	void parseStruct();
-	void parseIntoScope(Scope* theScope);
+	Type* deriveTypeFromToken(Token* theToken);
 
+	Statement* parseExpr();
+
+	Variable* fetchNextVariable(Type* theType);
+	void parseVarDefs();
+
+
+	void parseStruct();
+	void parseIntoScope();
+
+	bool checkRedeclaration(const std::string& name, bool doError = true);
+	StructType* findStructType(const std::string& name);
+
+
+	Scope* currentScope();
 private:
 	Lexer* mLexer;
+
 	std::vector<Token*>* tokenVec;
 	std::vector<Token*>::iterator tokenIt;
 	Token* currentToken;
 
+	Token* nullToken; // = &theActualNullToken
+	Token theActualNullToken;
+
+
 	Scope* globalScope;
-	std::stack<Scope*> scopeStack; 
+	std::deque<Scope*> scopeStack; 
 
 
 	BiMap<TokenType, Type*, int, Type*> typeMap;

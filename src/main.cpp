@@ -15,5 +15,6 @@ int main(int argc, const char *argv[])
 	if(ErrorManager::haveErrors())
 		printf("%s\n", ErrorManager::report().c_str());
 	ErrorManager::destroy();
+	//exit(0);
 	return 0;
 }

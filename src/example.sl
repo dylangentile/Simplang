@@ -7,16 +7,21 @@ struct MyStruct
 };
 
 
-void myStructEditor(MyStruct ptr thingy)
+void myStructEditor(MyStruct* thingy)
 {
 	thingy.id = 5;
 	thingy.value = 12;
 }
 
-
+int, int returnsTwoInts()
+{
+	return 3, 4;
+}
 
 int main(string[] argv)
 {
+
+	x, y := returnsTwoInts();
 
 	for(arg : argv)
 	{
@@ -44,18 +49,18 @@ int main(string[] argv)
 	byte[] strbytes = hello.bytes();
 
 	//for const char* folks:
-	byte ptr g = &byte[0];  //byte* x 
+	byte* g = &byte[0];  //byte* x 
 
 
 	//the three types of pointer and allocations
 	//byte* x = new byte(0x12);
-	byte ptr x = make(byte(0x12));
+	byte* x = make(byte(0x12));
 	
 	//std::unique_ptr<byte> y = std::make_unique<byte>(0xAB);
-	unique byte ptr y = make(byte(0xAB)); 
+	unique byte y = make(byte(0xAB)); 
 	
 	//std::shared_ptr<byte> z = make_shared<byte>(0xFF);
-	shared byte ptr z = make(byte(0xFF)); 
+	shared byte z = make(byte(0xFF)); 
 
 
 	destroy(x);

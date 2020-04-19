@@ -242,6 +242,9 @@ Lexer::fetchToken()
 			theToken->mType = kToken_UNKNOWN;
 		}
 
+		if(theToken->mType == kToken_PTR)
+			lerror(kE_Error, theToken, "ptr is a reserved keyword!");
+
 		return theToken;
 	}
 

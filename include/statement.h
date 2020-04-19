@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <vector>
 #include <string>
+#include <unordered_set>
 
 typedef enum 
 {
@@ -44,7 +45,7 @@ public:
 
 };
 
-class Expression;
+//class Expression;
 
 class Scope : public Statement
 {
@@ -52,7 +53,8 @@ public:
 	Scope();
 	~Scope();
 
-	BiMap<Type*, std::string, Type*, std::string> structDefinitions;
+	BiMap<StructType*, std::string, StructType*, std::string> structDefinitions;
+	std::unordered_set<std::string> usedNames;
 
 	std::vector<Statement*> statementVec;
 
@@ -61,12 +63,12 @@ public:
 class Variable : public Statement
 {
 public:
-	Variable();
+	Variable(const std::string& name, Type* type);
 	~Variable();
 
-	std::string varName;
+	std::string mName;
 	Type* mType;
-	Expression* mInitializer;
+	Statement* mInitializer;
 
 };
 
@@ -87,6 +89,7 @@ public:
 	Structure();
 	~Structure();
 	std::vector<Variable*> members;
+	//TODO verify names on second pass
 };
 
 
