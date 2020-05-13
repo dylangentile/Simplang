@@ -55,7 +55,7 @@ public:
 class StructType : public Type
 {
 public:
-	StructType(const std::string& name_, bool defined = true);
+	StructType(const std::string& name_);
 	~StructType();
 	std::string name;
 	Structure* definition;

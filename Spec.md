@@ -176,7 +176,7 @@ The way the compiler finds the appropriate override is by hiking back up the sta
 
 
 ## Memory
-It is reccomended to use to `unique T*` and `shared T*` wherever possible, since they clean themselves up using simple refrence counting (Meaning there are still possible bugs...). Simplang doesn't implement garbage collection, nor is it planned to, so proceed at your own risk. 
+It is reccomended to use `unique T*` and `shared T*` wherever possible, since they clean themselves up using simple refrence counting (Meaning there are still possible bugs...). Simplang doesn't implement garbage collection, nor is it planned to, so proceed at your own risk. 
 
 ## In Contention
 

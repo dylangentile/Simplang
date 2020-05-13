@@ -2,15 +2,13 @@
 #include "typing.h"
 
 
-StructType::StructType(const std::string& name_, bool defined) : Type(kType_Struct), name(name_)
+StructType::StructType(const std::string& name_) : Type(kType_Struct), name(name_), definition(nullptr)
 {
-	if(defined)
-		definition = new Structure;
-	else
-		definition = nullptr;
+
 }
 
 StructType::~StructType()
 {
-	delete definition;
+	if(definition != nullptr)
+		delete definition;
 }

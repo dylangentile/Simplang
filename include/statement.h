@@ -1,6 +1,7 @@
 #pragma once
 #include "typing.h"
 #include "bimap.h"
+#include "token.h"
 
 #include <cstdlib>
 #include <vector>
@@ -32,6 +33,7 @@ typedef enum
 	kOp_MOD
 }OperationID;
 
+class Function;
 
 
 
@@ -41,7 +43,7 @@ public:
 	Statement(StatementID id_);
 	virtual ~Statement();
 
-	StatementID mId;
+	const StatementID mId;
 
 };
 
@@ -53,7 +55,16 @@ public:
 	Scope();
 	~Scope();
 
-	BiMap<StructType*, std::string, StructType*, std::string> structDefinitions;
+	bool usedSymbol(const std::string& name);
+	StructType* insertStruct(Token* tok);
+
+public:
+	BiMap<StructType*, std::string, StructType*, std::string> structMap;
+	BiMap</*Enum*/Type*, std::string, /*Enum*/Type*, std::string> enumMap;
+	BiMap<Function*, std::string, Function*, std::string> functionMap;
+
+	
+
 	std::unordered_set<std::string> usedNames;
 
 	std::vector<Statement*> statementVec;
@@ -80,7 +91,7 @@ public:
 	~VariableAssignment();
 
 	Variable* assignTo;
-	Statement* value; 
+	Statement* expr; 
 };
 
 class Structure : public Statement
@@ -102,7 +113,7 @@ public:
 	Function();
 	~Function();
 
-	Type* type;
+	std::vector<Type*> typeVec;
 
 	std::string mName;
 	std::vector<Variable*> args;

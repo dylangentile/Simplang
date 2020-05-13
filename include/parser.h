@@ -17,6 +17,9 @@ public:
 
 
 private:
+
+	void getDefs();
+
 	
 	Token* fetchToken();
 	Token* lookAhead(uint32_t offset);
@@ -24,7 +27,12 @@ private:
 	Type* deriveTypeFromToken(Token* theToken);
 	void getTypeList(std::vector<Type*>& typeVec);
 
+
+	//parseExpr helpers
+	FunctionCall* parseFunctionCall();
 	Statement* parseExpr();
+	
+
 
 	Variable* fetchNextVariable(Type* theType);
 	void parseVarDefs(std::vector<Type*>* typeArray = nullptr);
@@ -32,7 +40,6 @@ private:
 
 	void parseStruct();
 	void parseFunction();
-
 
 
 	void parseIntoScope();

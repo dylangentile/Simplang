@@ -95,7 +95,7 @@ Parser::findStructType(const std::string& name)
 	for(auto it = scopeStack.rbegin(); it != scopeStack.rend(); it++)
 	{
 		Scope* theScope = *it;
-		StructType** finder = theScope->structDefinitions[name];
+		StructType** finder = theScope->structMap[name];
 		if(finder != nullptr)
 			return *finder;
 	}
@@ -121,11 +121,12 @@ Parser::deriveTypeFromToken(Token* theToken)
 		StructType* finder = findStructType(theToken->mStr);
 		if(finder == nullptr)
 		{
-			finder = new StructType(theToken->mStr, false);
-			currentScope()->structDefinitions.insert(finder, finder->name);
+			//finder = new StructType(theToken->mStr, false);
+			//currentScope()->structMap.insert(finder, finder->name);
+			theType = nullptr;
 		}
-	
-		theType = dynamic_cast<Type*>(finder);
+		else
+			theType = dynamic_cast<Type*>(finder);
 	}
 
 	if(theType == nullptr)
@@ -153,10 +154,87 @@ Parser::getTypeList(std::vector<Type*>& typeVec)
 
 
 
-Statement*
-Parser::parseExpr()
+
+FunctionCall*
+Parser::parseFunctionCall()
 {
+
+	/*if(currentToken->mCat != kCat_WildIdentifier)
+		lerror(kE_Error, currentToken, "Invalid token for function call!");
+
+	Function* theFunc;
+	Function** finder = currentScope()->functionDefMap[currentToken->mStr];
+	if(finder == nullptr)
+	{
+		Function* theFunc = new Function();
+		theFunc->mName = currentToken->mStr;
+		currentScope()->functionDefMap.insert(theFunc, theFunc->mName);
+	}
+	else
+		theFunc = *finder;
+
+
+	FunctionCall* theCall = new FunctionCall;
+	theCall->parentFunc = theFunc;
+
+	fetchToken();
+
+	if(currentToken->mType != kToken_LPAREN)
+		lerror(kE_Fatal, currentToken, "Function call mis-id!");
 	
+
+	fetchToken();
+
+	while(currentToken->mType != kToken_RPAREN)
+	{
+		if(currentToken == nullToken)
+			lerror(kE_Fatal, nullptr, "reached EOF before end of function call!");
+		fetchToken();
+		theCall->args.push_back(parseExpr());
+	}
+
+	fetchToken();
+
+	return theCall;*/
+	return nullptr;
+
+
+
+
+
+
+}
+
+
+
+/*
+
+Expressions are the construct of programming that get things done
+I like to treat expressions like in math, i.e x = 5 is an equation,
+5 is an expression.
+
+An expression contains identifiers, function calls, immediates, and operations.
+identifiers, function calls, and immediates are all acted upon by the operations,
+therefore I will call them operands
+
+
+*/
+
+
+Statement*
+Parser::parseExpr(/*Type* typeHint*/)
+{
+	if(currentToken->mType == kToken_ASSIGN_EQUAL)
+		fetchToken();
+
+	Statement* operand1 = nullptr;
+	if(currentToken->mCat == kCat_WildIdentifier)
+	{
+		if(lookAhead(1)->mType == kToken_LPAREN)
+		{
+			FunctionCall* parseFunctionCall();
+		}
+	}	
 }
 
 
@@ -287,64 +365,6 @@ Parser::parseVarDefs(std::vector<Type*>* typeArray)
 void
 Parser::parseStruct()
 {
-
-	ErrorManager::resetCounter();
-
-	fetchToken();
-
-	if(currentToken->mCat != kCat_WildIdentifier)
-		lerror(kE_Error, currentToken, "Struct declaration must be followed by valid identifier!");
-	
-	
-	checkRedeclaration(currentToken->mStr);
-	
-	
-	StructType* structTyping = new StructType(currentToken->mStr);
-	
-	
-
-	fetchToken();
-	if(currentToken->mType != kToken_LCURLY)
-		lerror(kE_Error, currentToken, "invalid token following struct declaration");
-
-	fetchToken();
-	
-	Scope temporaryScope;
-	scopeStack.push_back(&temporaryScope);
-	parseVarDefs();
-	scopeStack.pop_back();
-
-
-	
-
-	if(currentToken->mType != kToken_SEMICOLON)
-		lerror(kE_Error, currentToken, "Struct definition needs closing semicolon!");
-	fetchToken();
-
-	for(auto it = temporaryScope.statementVec.begin(); it != temporaryScope.statementVec.end(); it++)
-	{
-		if((*it)->mId != kState_Variable)
-			lerror(kE_Error, currentToken, "struct cannot have non variable statements!");
-		structTyping->definition->members.push_back(dynamic_cast<Variable*>(*it));
-	}
-
-	if(ErrorManager::gotErrors())
-	{
-		delete structTyping;
-		return;
-	}
-
-	for(auto it = temporaryScope.structDefinitions.map1.begin(); it != temporaryScope.structDefinitions.map1.end(); it++)
-	{
-		currentScope()->structDefinitions.insert(it->first, it->second);
-	}
-
-
-
-	currentScope()->statementVec.push_back(dynamic_cast<Statement*>(structTyping->definition));
-	currentScope()->structDefinitions.insert(structTyping, structTyping->name);
-
-	
 
 }
 

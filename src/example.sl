@@ -5,6 +5,13 @@ struct MyStruct
 };
 
 
+enum Color
+{
+	Red,
+	White,
+	Blue
+};
+
 void myStructEditor(MyStruct* thingy)
 {
 	thingy.id = 5;
@@ -23,15 +30,19 @@ int, string returnsTwoTypes()
 
 int main(string[] argv)
 {
-	//two ways to declare variables:
-	//	c-style
-	int i1, i2 = 4, i3;
-	//	variable-type style
-	int, int, int : i4, i5 = 4, i6;
+	//couple ways to declare variables:
+	//	Option 4 is considered "idiomatic"
+	//int i1 = 5; //option 1
+	//int    : i1 = 5; // option 2
+	//int(5) : i1; //option 3
+	i1 := 5; //option 4
+
+	//	declare multiple vars of same type
+	int(8)... : i4, i5 = 4, i6; //the i5 = 4 overrides the default 8
 	//the above is useful in the examples below
 
 	//can assign to standard var-declaration list
-	int d1, x1, y1 = returnsTwoInts(); //assigns to x1, y1
+	int... : d1, x1, y1 = returnsTwoInts(); //assigns to x1, y1
 	//int w1, string s1 = returnsTwoTypes(); //error string cannot be used as variable name... etc
 	int, string : w1, s1 = returnsTwoTypes(); //handling multiple types
 	x2, y2 := returnsTwoInts(); // the type is inferred
@@ -51,22 +62,20 @@ int main(string[] argv)
 
 	}
 
-	for(int i : 0..argv.size()) //inclusive range with ..=
+	//note that you can do this with enums if that's your kind of thing
+	for(i : 0..argv.size()) //inclusive range with ..=
 	{
 
 	}
 
-	//c-style (declaration; halting condition; increment)
-	for(int i = 0; i < argv.size(); i++)
-	{
 
-	}
 
 	string hello = "hello world";
 	hello2 := "hello world"; //essentially auto hello2 = string('hello world')
 	//note that string immediates in simplang are treated like the string type, not a byte array!
 
-	//array
+	//array - note that this will break the utf-8 characters up into bytes
+	// similar to std::string::c_str()
 	byte[] strbytes = hello.bytes();
 
 	//for const char* folks:
@@ -75,20 +84,20 @@ int main(string[] argv)
 
 	//the three types of pointer and allocations
 	//byte* x = new byte(0x12);
-	byte* x = make(byte(0x12));
+	byte* x = new byte(0x12);
 	
 	//std::unique_ptr<byte> y = std::make_unique<byte>(0xAB);
-	unique byte y = make(byte(0xAB)); 
+	unique byte y = new byte(0xAB); 
 	
-	//std::shared_ptr<byte> z = make_shared<byte>(0xFF);
-	shared byte z = make(byte(0xFF)); 
+	//std::shared_ptr<byte> z = std::make_shared<byte>(0xFF);
+	shared byte z = new byte(0xFF); 
 
 
 	destroy(x);
 
 	//c-style array;
 	//note that this is not a simplang array,
-	x = make(byte)[25];
+	x = new byte[25];
 
 	//you can also access your c-style array like in c
 	x[5] = 0xFF;
@@ -106,8 +115,8 @@ int main(string[] argv)
 
 	string msg = match(num)
 	{
-		5: "it's five!",
-		2 || 3 || 5 || 7 || 11: "it's prime!",
+		2 || 3 || 5 || 7 || 11: "it's prime!" continue +=; //proposal
+		5: "it's five!";
 		_: "Default"
 	};
 
