@@ -16,7 +16,7 @@ public:
 
 
 
-typedef struct
+typedef struct Token
 {
 	TokenType mType = kToken_NULL;
 	TokenCategory mCat = kCat_NULL;

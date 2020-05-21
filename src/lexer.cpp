@@ -47,6 +47,7 @@ Lexer::Lexer(const char* filename)
 	keywordMap.insert(kToken_FOR, "for");
 	keywordMap.insert(kToken_WHILE, "while");
 	keywordMap.insert(kToken_MATCH, "match");
+	keywordMap.insert(kToken_IS, "is");
 
 
 	keywordMap.insert(kToken_BREAK, "break");
@@ -56,7 +57,17 @@ Lexer::Lexer(const char* filename)
 
 	keywordMap.insert(kToken_ENUM, "enum");
 	keywordMap.insert(kToken_STRUCT, "struct");
+
+	keywordMap.insert(kToken_USE, "use");
+	keywordMap.insert(kToken_IMPORT, "import");
+	keywordMap.insert(kToken_AS, "as");
+	keywordMap.insert(kToken_UNIT, "unit");
 	
+	keywordMap.insert(kToken_PUBLIC, "public");
+	keywordMap.insert(kToken_PRIVATE, "private");
+
+	keywordMap.insert(kToken_ISNULL, "isnull");
+	keywordMap.insert(kToken_SIZEOF, "sizeof");
 	
 	langOperatorMap.insert(kToken_SEMICOLON, ";");
 	langOperatorMap.insert(kToken_COLON, ":");
@@ -98,8 +109,11 @@ Lexer::Lexer(const char* filename)
 	operatorMap.insert(kToken_LOGIC_AND, "&&");
 	operatorMap.insert(kToken_LOGIC_OR, "||");
 
-	operatorMap.insert(kToken_DEREF, "@");
+	operatorMap.insert(kToken_ADDR, "@");
 	operatorMap.insert(kToken_DOT, ".");
+
+	operatorMap.insert(kToken_SFNAV, "?.");
+	operatorMap.insert(kToken_NULLCC,"??");
 
 
 	operatorMap.insert(kToken_BIT_AND, "&");

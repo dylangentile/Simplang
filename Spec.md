@@ -141,6 +141,24 @@ Do note that you can have two constructors following the example from above by u
 
 If your struct contains a unique pointer or a smart pointer you must supply a constructor tagged `only` that initializes them.
 
+
+## Operators
+### Assignment
+- '='  '=:'
+
+
+### Arithmetic
+- '+'  '-'  '\*'  '/'  '%'
+- '+=' '-=' '\*=' '/=' '%='
+- '++' '--'
+
+### Logic
+- '==' '<'  '>'  '!'
+- '!=' '<=' '>='
+- '&&' '||' 
+
+
+
 ## Scopes
 Although Simplang doesn't allow overriding of functions within a single scope, you can override/declare functions, structs, and variables in each scope:
 

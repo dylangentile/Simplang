@@ -53,6 +53,7 @@ typedef enum
 	kToken_FOR,
 	kToken_WHILE,
 	kToken_MATCH,
+	kToken_IS,
 
 	kToken_BREAK,
 	kToken_CONTINUE,
@@ -60,6 +61,17 @@ typedef enum
 
 	kToken_ENUM,
 	kToken_STRUCT,
+
+	kToken_USE,
+	kToken_IMPORT,
+	kToken_AS,
+	kToken_UNIT,
+
+	kToken_PUBLIC,
+	kToken_PRIVATE,
+
+	kToken_ISNULL,
+	kToken_SIZEOF,
 
 
 	kToken_SEMICOLON,
@@ -102,8 +114,11 @@ typedef enum
 	kToken_LOGIC_AND,
 	kToken_LOGIC_OR,
 
-	kToken_DEREF,
+	kToken_ADDR,
 	kToken_DOT,
+
+	kToken_SFNAV, //safe navigation
+	kToken_NULLCC, //null coalesce
 
 	kToken_BIT_AND,
 	kToken_BIT_OR,
