@@ -62,6 +62,7 @@ Lexer::Lexer(const char* filename)
 	keywordMap.insert(kToken_IMPORT, "import");
 	keywordMap.insert(kToken_AS, "as");
 	keywordMap.insert(kToken_UNIT, "unit");
+	keywordMap.insert(kToken_CINCLUDE, "cinclude");
 	
 	keywordMap.insert(kToken_PUBLIC, "public");
 	keywordMap.insert(kToken_PRIVATE, "private");
@@ -257,8 +258,8 @@ Lexer::fetchToken()
 			theToken->mType = kToken_UNKNOWN;
 		}
 
-		if(theToken->mType == kToken_PTR)
-			lerror(kE_Error, theToken, "ptr is a reserved keyword!");
+		/*if(theToken->mType == kToken_PTR)
+			lerror(kE_Error, theToken, "ptr is a reserved keyword!");*/
 
 		return theToken;
 	}

@@ -58,10 +58,14 @@ public:
 	bool usedSymbol(const std::string& name);
 	StructType* insertStruct(Token* tok);
 
+	Type* getType(const std::string& name);
+
 public:
 	BiMap<StructType*, std::string, StructType*, std::string> structMap;
 	BiMap</*Enum*/Type*, std::string, /*Enum*/Type*, std::string> enumMap;
 	BiMap<Function*, std::string, Function*, std::string> functionMap;
+
+	BiMap<UnknownType*, std::string, UnknownType*, std::string> unknownTypeMap; 
 
 	
 

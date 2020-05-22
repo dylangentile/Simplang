@@ -1,9 +1,11 @@
 unit main is private; //this is the "main" 'unit' of our 'program', and its members are 'private'
 import std.io;
 
+//import "C"."header.h"; //I want the interface to look like this, but I haven't decided on the details yet
+//import "C" ptr malloc(size_t size); //single external declaration. The linker will look for this. This will work before the above works.
 
-public struct 
-MyStruct
+struct 
+MyStruct : public
 {
 	uint8, int16 : id, value;
 };
@@ -102,10 +104,10 @@ main(string[] argv)
 	byte* x = new byte(0x12);
 	
 	//std::unique_ptr<byte> y = std::make_unique<byte>(0xAB);
-	unique byte y = new byte(0xAB); 
+	unique byte* y = new byte(0xAB); 
 	
 	//std::shared_ptr<byte> z = std::make_shared<byte>(0xFF);
-	shared byte z = new byte(0xFF); 
+	shared byte* z = new byte(0xFF); 
 
 	//alternatively you can use calloc()
 

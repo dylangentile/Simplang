@@ -24,6 +24,7 @@ typedef enum
 	
 	kToken_VOID,
 	kToken_STRING,
+//	kToken_CHAR,
 	kToken_BYTE,
 	kToken_BOOL,
 
@@ -42,6 +43,7 @@ typedef enum
 
 	kToken_DYNAMIC,
 	kToken_TYPENAME,
+//	kToken_VOIDPTR,
 	
 
 	kToken_PTR,
@@ -66,6 +68,7 @@ typedef enum
 	kToken_IMPORT,
 	kToken_AS,
 	kToken_UNIT,
+	kToken_CINCLUDE,
 
 	kToken_PUBLIC,
 	kToken_PRIVATE,

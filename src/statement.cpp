@@ -50,6 +50,28 @@ Scope::insertStruct(Token* tok)
 
 }
 
+Type* 
+Scope::getType(const std::string& name)
+{
+	//the enumMap and structMap cannot contain duplicate symbols 
+	//	since the insertStruct/Enum functions take care of that for us
+
+	StructType** st = nullptr;
+	UnknownType** ut = nullptr;
+	/*Enum*/Type** et = nullptr;
+
+
+	if((st = structMap[name]) != nullptr) 
+		return dynamic_cast<Type*>(*st);
+	if((ut = unknownTypeMap[name]) != nullptr) 
+		return dynamic_cast<Type*>(*ut);
+	if((et = enumMap[name]) != nullptr) 
+		return dynamic_cast<Type*>(*et);
+	
+	return nullptr;
+
+}
+
 Variable::Variable(const std::string& name, Type* type) 
 	: Statement(kState_Variable), mName(name), mType(type), mInitializer(nullptr)
 {

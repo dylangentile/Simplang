@@ -75,304 +75,92 @@ Parser::lookAhead(uint32_t offset)
 	return *(tokenIt + (offset - 1));
 }
 
-bool
-Parser::checkRedeclaration(const std::string& name, bool doError)
-{
-	auto finder = scopeStack.back()->usedNames.find(name);
-	if(finder != scopeStack.back()->usedNames.end())
-	{
-		if(doError) lerror(kE_Error, currentToken, "This identifier is already being used!");
-		return true;
-	}
-
-	return false;
-}
-
-StructType*
-Parser::findStructType(const std::string& name)
-{
-	//go from back to front
-	for(auto it = scopeStack.rbegin(); it != scopeStack.rend(); it++)
-	{
-		Scope* theScope = *it;
-		StructType** finder = theScope->structMap[name];
-		if(finder != nullptr)
-			return *finder;
-	}
-	return nullptr;
-}
 
 
-
-Type* 
-Parser::deriveTypeFromToken(Token* theToken)
-{
-	Type* theType = nullptr;
-	if(theToken->mCat == kCat_BasicType)
-	{
-
-		Type** finder = typeMap[theToken->mType];
-		if(finder == nullptr)
-			lerror(kE_Fatal, theToken, "Token incorrectly categorized, or not included in typeMap! (Compiler Bug, not your fault)");
-		theType = *finder;
-	}
-	else if(theToken->mCat == kCat_WildIdentifier)
-	{
-		StructType* finder = findStructType(theToken->mStr);
-		if(finder == nullptr)
-		{
-			//finder = new StructType(theToken->mStr, false);
-			//currentScope()->structMap.insert(finder, finder->name);
-			theType = nullptr;
-		}
-		else
-			theType = dynamic_cast<Type*>(finder);
-	}
-
-	if(theType == nullptr)
-		lerror(kE_Error, theToken, "Expected Type!");
-
-	return theType;
-}
-
-void 
+void
 Parser::getTypeList(std::vector<Type*>& typeVec)
 {
-	Type* theType = deriveTypeFromToken(currentToken);
-	typeVec.push_back(theType);
-	fetchToken();
-
-	while(currentToken->mType == kToken_COMMA)
+	do
 	{
-		fetchToken();
-		theType = deriveTypeFromToken(currentToken);
-		typeVec.push_back(theType);
-		fetchToken();
-	}
-}
+		Type* cType = nullptr;
+		PointerID thePtrID = kPtr_Raw;
 
-
-
-
-
-FunctionCall*
-Parser::parseFunctionCall()
-{
-
-	/*if(currentToken->mCat != kCat_WildIdentifier)
-		lerror(kE_Error, currentToken, "Invalid token for function call!");
-
-	Function* theFunc;
-	Function** finder = currentScope()->functionDefMap[currentToken->mStr];
-	if(finder == nullptr)
-	{
-		Function* theFunc = new Function();
-		theFunc->mName = currentToken->mStr;
-		currentScope()->functionDefMap.insert(theFunc, theFunc->mName);
-	}
-	else
-		theFunc = *finder;
-
-
-	FunctionCall* theCall = new FunctionCall;
-	theCall->parentFunc = theFunc;
-
-	fetchToken();
-
-	if(currentToken->mType != kToken_LPAREN)
-		lerror(kE_Fatal, currentToken, "Function call mis-id!");
-	
-
-	fetchToken();
-
-	while(currentToken->mType != kToken_RPAREN)
-	{
-		if(currentToken == nullToken)
-			lerror(kE_Fatal, nullptr, "reached EOF before end of function call!");
-		fetchToken();
-		theCall->args.push_back(parseExpr());
-	}
-
-	fetchToken();
-
-	return theCall;*/
-	return nullptr;
-
-
-
-
-
-
-}
-
-
-
-/*
-
-Expressions are the construct of programming that get things done
-I like to treat expressions like in math, i.e x = 5 is an equation,
-5 is an expression.
-
-An expression contains identifiers, function calls, immediates, and operations.
-identifiers, function calls, and immediates are all acted upon by the operations,
-therefore I will call them operands
-
-
-*/
-
-
-Statement*
-Parser::parseExpr(/*Type* typeHint*/)
-{
-	if(currentToken->mType == kToken_ASSIGN_EQUAL)
-		fetchToken();
-
-	Statement* operand1 = nullptr;
-	if(currentToken->mCat == kCat_WildIdentifier)
-	{
-		if(lookAhead(1)->mType == kToken_LPAREN)
+		if(currentToken->mType == kToken_SHARED)
 		{
-			FunctionCall* parseFunctionCall();
+			thePtrID = kPtr_Shared;
+			fetchToken();
 		}
-	}	
-}
-
-
-
-
-
-
-
-
-Variable*
-Parser::fetchNextVariable(Type* theType)
-{
-	if(currentToken->mCat != kCat_WildIdentifier)
-	{
-		lerror(kE_Error, currentToken, "Cannot define variable with non-identifier");
-		fetchToken();
-		return nullptr;
-	}
-
-	//the outside world will "catch" the error
-	// in this case either parseStruct or parseVarDefs
-	checkRedeclaration(currentToken->mStr);
-
-	Variable* theVar = new Variable(currentToken->mStr, theType);
-
-	fetchToken();
-	if(currentToken->mType == kToken_ASSIGN_EQUAL)
-		theVar->mInitializer = parseExpr();
-
-	return theVar;
-
-}
-
-
-
-
-void
-Parser::parseVarDefs(std::vector<Type*>* typeArray)
-{
-	ErrorManager::resetCounter();
-
-	std::vector<Type*> rtypeArray;
-	if(typeArray == nullptr)
-	{
-		getTypeList(rtypeArray);
-		typeArray = &rtypeArray;
-	}
-
-	
-
-	
-
-
-	if(currentToken->mType == kToken_COLON)
-	{
-		fetchToken();
-		for(auto it = typeArray->begin(); it != typeArray->end(); it++)
+		else if(currentToken->mType == kToken_UNIQUE)
 		{
-			Variable* theVar = fetchNextVariable(*it);
-			if(theVar == nullptr)
-				break;
+			thePtrID = kPtr_Unique;
+			fetchToken();
+		}
+		
 
-			currentScope()->statementVec.push_back(dynamic_cast<Statement*>(theVar));
-			currentScope()->usedNames.insert(theVar->mName);
-
-			if(currentToken->mType == kToken_COMMA)
+		if(currentToken->mCat == kCat_BasicType)
+		{
+			Type** fType = typeMap[currentToken->mType];
+			if(fType == nullptr)
+				lerror(kE_Fatal, currentToken, "Compiler error code: 0x001 -- Please Report");
+			cType = *fType;
+			
+		}
+		else if(currentToken->mCat == kCat_WildIdentifier)
+		{
+			for(auto scopeIt = scopeStack.rbegin(); scopeIt != scopeStack.rend(); scopeIt++)
 			{
-				fetchToken();
-				if(it + 1 == typeArray->end())
-					lerror(kE_Fatal, currentToken, "more variables than types!");
-				continue;
+				if((cType = (*scopeIt)->getType(currentToken->mStr)) != nullptr)
+					break;
 			}
 
-			if(currentToken->mType == kToken_SEMICOLON)
+			if(cType == nullptr)
 			{
-				if(it + 1 != typeArray->end())
-				{
-					lwarning(currentToken, "declared more types than symbols!");
-				}
-				break;
+				UnknownType* uType = new UnknownType();
+				currentScope()->unknownTypeMap.insert(uType, currentToken->mStr);
+				cType = dynamic_cast<Type*>(uType);
+			}
+		}
+		else
+		{
+			lerror(kE_Error, currentToken, "invalid token in type sequence");
+		}
+
+		if(lookAhead(1)->mType == kToken_MULTIPLY)
+		{
+			auto finder = ptrTypeMap.find(cType);
+			
+			if(finder == ptrTypeMap.end())
+			{
+				Type* pType = new PointerType(cType, thePtrID);
+				ptrTypeMap.insert(std::make_pair(cType, pType));
+				cType = pType;
+			}
+			else
+			{
+				cType = finder->second;
 			}
 
-			lerror(kE_Error, currentToken, "Unknown token in variable declaration(s)!");
+			fetchToken();
+
+		}
+		else if(thePtrID != kPtr_Raw)
+		{
+			lerror(kE_Error, currentToken, "Declared unique/shared attribute of non-pointer type!");
+		}
+
+
+		if(cType == nullptr)
+				lerror(kE_Error, currentToken, "invalid type!");
+
+		typeVec.push_back(cType);
+
+		if(fetchToken()->mType != kToken_COMMA)
 			break;
+		fetchToken();
 
-		}
-	}
-	else
-	{
-
-		Type* theType = (*typeArray)[0];
-		while(true)
-		{
-			Variable* theVar = fetchNextVariable(theType);
-			if(theVar == nullptr)
-				break;
-
-			scopeStack.back()->statementVec.push_back(dynamic_cast<Statement*>(theVar));
-			scopeStack.back()->usedNames.insert(theVar->mName);
-
-			if(currentToken->mType == kToken_COMMA)
-			{
-				fetchToken();
-				continue;
-			}
-
-			if(currentToken->mType == kToken_SEMICOLON)
-				break;
-
-			lerror(kE_Error, currentToken, "Unknown token in variable declaration(s)!");
-			break;
-		}
-
-		if(typeArray->size() > 1)
-			lerror(kE_Error, currentToken, "Probably missing a semicolon in your declaration!");
-	}
-
-
-
-	if(ErrorManager::gotErrors())
-		lerror(kE_Fatal, nullptr, "failed variable declaration parsing!");
-
-
-
+	} while(true);
 }
 
-
-void
-Parser::parseStruct()
-{
-
-}
-
-void
-Parser::parseFunction()
-{
-
-}
 
 void
 Parser::parseIntoScope()
@@ -382,27 +170,91 @@ Parser::parseIntoScope()
 	{
 		if(currentToken->mCat == kCat_Keyword)
 		{
-			if(currentToken->mType == kToken_STRUCT)
-				parseStruct();
-			
+			if(currentToken->mType == kToken_UNIQUE || currentToken->mType == kToken_SHARED)
+			{
+				goto handleType;
+			}
+			else if(currentToken->mType == kToken_IF)
+			{
+
+			}
+			else if(currentToken->mType == kToken_ELSE)
+			{
+
+			}
+			else if(currentToken->mType == kToken_FOR)
+			{
+
+			}
+			else if(currentToken->mType == kToken_WHILE)
+			{
+
+			}
+			else if(currentToken->mType == kToken_MATCH)
+			{
+
+			}
+			else if(currentToken->mType == kToken_BREAK)
+			{
+
+			}
+			else if(currentToken->mType == kToken_CONTINUE)
+			{
+
+			}
+			else if(currentToken->mType == kToken_RETURN)
+			{
+
+			}
+			else if(currentToken->mType == kToken_ENUM)
+			{
+
+			}
+			else if(currentToken->mType == kToken_STRUCT)
+			{
+				
+			}
+			else if(currentToken->mType == kToken_USE)
+			{
+
+			}
+			else if(currentToken->mType == kToken_IMPORT)
+			{
+
+			}
+			else if(currentToken->mType == kToken_UNIT) 
+			{
+
+			}
+			else if(currentToken->mType == kToken_CINCLUDE)
+			{
+				lerror(kE_Error, currentToken, "Reserved Keyword!");
+			}
+			else if(currentToken->mType == kToken_ISNULL)
+			{
+
+			}
+			else if(currentToken->mType == kToken_SIZEOF)
+			{
+
+			}
 		}
 		else if(currentToken->mCat == kCat_BasicType)
 		{
+			handleType:
 			std::vector<Type*> typeVec;
 			getTypeList(typeVec);
+
+		}
+		else if(currentToken->mCat == kCat_WildIdentifier)
+		{
 			
-			if(currentToken->mCat == kCat_WildIdentifier)
-				parseFunction();
-			else if(currentToken->mType == kToken_COLON)
-				parseVarDefs(&typeVec);				
 		}
 
 
-		
-
 		if(prevToken == currentToken)
 		{
-			//lerror(kE_Error, prevToken, "Unhandled token!");
+			lerror(kE_Error, prevToken, "Unhandled token!");
 			fetchToken();
 		}
 		prevToken = currentToken;

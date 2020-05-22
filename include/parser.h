@@ -65,4 +65,5 @@ private:
 
 
 	BiMap<TokenType, Type*, int, Type*> typeMap;
+	std::unordered_map<Type*, Type*> ptrTypeMap;
 };

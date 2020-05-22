@@ -32,13 +32,16 @@ typedef enum
 
 	kBaseT_DYNAMIC,
 	kBaseT_TYPENAME
+
+//	kBaseT_VOIDPTR
 }BasicTypeID;
 
 typedef enum 
 {
 	kType_Struct,
 	kType_Ptr,
-	kType_Basic
+	kType_Basic,
+	kType_Unknown
 }TypeID;
 
 
@@ -74,10 +77,21 @@ public:
 class PointerType : public Type
 {
 public:
-	PointerType() : Type(kType_Ptr) {}
-	~PointerType(){}
+	PointerType(Type* pType, PointerID id_ = kPtr_Raw);
+	~PointerType();
 	PointerID ptrId;
 	Type* pointsTo;
+
+};
+
+class UnknownType : public Type
+{
+public:
+	UnknownType() : Type(kType_Unknown) {}
+	~UnknownType(){}
+
+	Type* actualType = nullptr;
+
 
 };
 

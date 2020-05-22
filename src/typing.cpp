@@ -12,3 +12,15 @@ StructType::~StructType()
 	if(definition != nullptr)
 		delete definition;
 }
+
+
+PointerType::PointerType(Type* pType, PointerID id_) : Type(kType_Ptr), ptrId(id_), pointsTo(pType)
+{
+
+}
+
+
+PointerType::~PointerType()
+{
+
+}
