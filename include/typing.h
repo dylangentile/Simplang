@@ -48,8 +48,8 @@ typedef enum
 class Type
 {
 public:
-	Type(TypeID id) : mId(id) {}
-	~Type(){}
+	Type(TypeID id);
+	virtual ~Type() = 0;
 
 	const TypeID mId;
 };

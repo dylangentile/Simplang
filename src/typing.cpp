@@ -1,6 +1,15 @@
 #include "statement.h"
 #include "typing.h"
 
+Type::Type(TypeID id) : mId(id)
+{
+
+}
+
+Type::~Type()
+{
+	
+}
 
 StructType::StructType(const std::string& name_) : Type(kType_Struct), name(name_), definition(nullptr)
 {

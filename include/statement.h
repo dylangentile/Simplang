@@ -13,14 +13,16 @@ typedef enum
 	kState_NULL = 0,
 	kState_Scope,
 	kState_Variable,
-	kState_VariableAssignment,
 	kState_Structure,
 	kState_Function,
 	kState_FunctionCall,
 	
-	//kState_BaseExpr,
 	kState_ImmediateExpr,
-	kState_BinOpExpr
+	kState_BinOpExpr,
+	
+	kState_DeclEqual,
+	kState_MultipleAssignment,
+	kState_Return
 
 }StatementID;
 
@@ -34,7 +36,11 @@ typedef enum
 }OperationID;
 
 class Function;
-
+class Variable;
+class FunctionCall;
+class DeclEqual;
+class MultipleAssignment;
+class Return;
 
 
 class Statement
@@ -47,7 +53,6 @@ public:
 
 };
 
-//class Expression;
 
 class Scope : public Statement
 {
@@ -56,7 +61,13 @@ public:
 	~Scope();
 
 	bool usedSymbol(const std::string& name);
-	StructType* insertStruct(Token* tok);
+	
+	Function* 			insertFunction(Token* tok);
+	StructType* 		insertStruct(Token* tok);
+	Variable* 			insertVariable(Token* tok, Type* type);
+	DeclEqual* 			insertDeclEqual();
+	MultipleAssignment*	insertMultipleAssignment();
+	Return*				insertReturn();
 
 	Type* getType(const std::string& name);
 
@@ -64,13 +75,9 @@ public:
 	BiMap<StructType*, std::string, StructType*, std::string> structMap;
 	BiMap</*Enum*/Type*, std::string, /*Enum*/Type*, std::string> enumMap;
 	BiMap<Function*, std::string, Function*, std::string> functionMap;
-
 	BiMap<UnknownType*, std::string, UnknownType*, std::string> unknownTypeMap; 
 
 	
-
-	std::unordered_set<std::string> usedNames;
-
 	std::vector<Statement*> statementVec;
 
 };
@@ -87,16 +94,33 @@ public:
 
 };
 
-
-class VariableAssignment : public Statement
+class DeclEqual : public Statement
 {
 public:
-	VariableAssignment();
-	~VariableAssignment();
+	DeclEqual();
+	~DeclEqual();
 
-	Variable* assignTo;
-	Statement* expr; 
+	Variable* insert(const std::string& name);
+	
+	std::vector<Variable*> varVec;
+	Statement* mInitializer;
+
+
+	
 };
+
+class MultipleAssignment : public Statement
+{
+public:
+	MultipleAssignment();
+	~MultipleAssignment();
+
+	std::vector<std::string> names; //1st stage
+	std::vector<Variable*> variableRefs; //2nd stage
+	Statement* expr;
+};
+
+
 
 class Structure : public Statement
 {
@@ -106,9 +130,6 @@ public:
 	std::vector<Variable*> members;
 	//TODO verify names on second pass
 };
-
-
-
 
 
 class Function : public Statement
@@ -125,14 +146,6 @@ public:
 };
 
 
-/*class Expression : public Statement
-{
-public:
-	Expression(StatementID id = kState_BaseExpr);
-	~Expression();
-
-
-};*/
 
 
 class BinOp : public Statement
@@ -158,10 +171,13 @@ public:
 };
 
 
-
-
-
-
+class Return : public Statement
+{
+public:
+	Return();
+	~Return();
+	Statement* expr;
+};
 
 class Immediate : public Statement
 {

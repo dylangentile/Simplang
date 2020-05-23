@@ -15,7 +15,7 @@ public:
 	//it is up to the person outside the api to delete the scope
 	Scope* parse();
 
-
+	std::string unitName;
 private:
 
 	void getDefs();
@@ -24,7 +24,7 @@ private:
 	Token* fetchToken();
 	Token* lookAhead(uint32_t offset);
 
-	Type* deriveTypeFromToken(Token* theToken);
+	Type* findType(Token* theToken);
 	void getTypeList(std::vector<Type*>& typeVec);
 
 
@@ -39,8 +39,8 @@ private:
 
 
 	void parseStruct();
-	void parseFunction();
-
+	void parseFunction(const std::vector<Type*>& typeVec);
+	void handleType();
 
 	void parseIntoScope();
 

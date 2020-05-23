@@ -27,6 +27,13 @@ myStructEditor(MyStruct* thingy)
 	thingy.value = 12;
 }
 
+  int
+  functionWithTonsOfInputs(int, string, int, byte, bool : a, b, c, d, e)
+//functionWithTonsOfInputs(int a, string b, int c, byte d, bool e) //alternative
+  {
+
+  }
+
 int, int 
 returnsTwoInts()
 {

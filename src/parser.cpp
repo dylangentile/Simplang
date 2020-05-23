@@ -163,6 +163,155 @@ Parser::getTypeList(std::vector<Type*>& typeVec)
 
 
 void
+Parser::handleType()
+{
+	std::vector<Type*> typeVec;
+	//todo:
+	//std::vector<Immediate*>  immediateVec;
+	getTypeList(typeVec/*,immediateVec*/ );
+
+	if(typeVec.size() < 1)
+	{
+		lerror(kE_Fatal, currentToken, "cannot form variable from invalid type list!");
+	}
+
+	if(currentToken->mCat == kCat_WildIdentifier)
+	{
+		if(typeVec.size() > 1 || lookAhead(1)->mType == kToken_LPAREN)
+		{
+			parseFunction(typeVec);
+		}
+		else
+		{
+			Variable* var = currentScope()->insertVariable(currentToken, typeVec[0]);
+
+			fetchToken();
+
+			if(currentToken->mType == kToken_ASSIGN_EQUAL)
+				var->mInitializer = parseExpr();
+
+			if(currentToken->mType != kToken_SEMICOLON)
+				lerror(kE_Fatal, currentToken, "missing semicolon!");
+		}
+
+
+	}
+
+	if(currentToken->mType == kToken_COLON)
+	{
+		fetchToken();
+
+		
+
+		auto it = typeVec.begin();
+
+		do
+		{
+			if(currentToken->mCat != kCat_WildIdentifier)
+				lerror(kE_Fatal, currentToken, "invalid variable token!");
+			Variable* var = currentScope()->insertVariable(currentToken, *it);
+			
+			fetchToken();
+
+			if(currentToken->mType == kToken_ASSIGN_EQUAL)
+				var->mInitializer = parseExpr();
+
+
+			if(currentToken->mType == kToken_SEMICOLON)
+				break;
+
+			if(currentToken->mType != kToken_COMMA)
+				lerror(kE_Fatal, currentToken, "invalid token in variable sequence");
+
+			fetchToken();
+
+			if(it + 1 != typeVec.end())
+				it++;
+		} while(true);
+
+		if(it + 1 != typeVec.end())
+			lerror(kE_Warning, currentToken, "More types than variables!");
+	}
+}
+
+Statement* 
+Parser::parseExpr()
+{
+	while(currentToken->mType != kToken_SEMICOLON)
+		fetchToken();
+
+	return nullptr;
+}
+
+
+
+void
+Parser::parseFunction(const std::vector<Type*>& typeVec)
+{
+	Function* func = currentScope()->insertFunction(currentToken);
+	func->typeVec = typeVec;
+	fetchToken();
+	if(currentToken->mType != kToken_LPAREN)
+		lerror(kE_Fatal, currentToken, "expected lparen");
+
+	fetchToken();
+
+	std::vector<Type*> argTypeVec;
+	getTypeList(argTypeVec);
+
+	if(currentToken->mType != kToken_COLON)
+		lerror(kE_Fatal, currentToken, "expected colon!");
+
+	fetchToken();
+
+		
+
+	auto it = typeVec.begin();
+
+	do
+	{
+		if(currentToken->mCat != kCat_WildIdentifier)
+			lerror(kE_Fatal, currentToken, "invalid arguement variable token!");
+		Variable* var = new Variable(currentToken->mStr, *it);
+		func->args.push_back(var);
+		
+		fetchToken();
+
+		if(currentToken->mType == kToken_ASSIGN_EQUAL)
+			lerror(kE_Fatal, currentToken, "Function arg defaults are not a feature of Simplang!");
+
+
+		if(currentToken->mType == kToken_RPAREN)
+			break;
+
+		if(currentToken->mType != kToken_COMMA)
+			lerror(kE_Fatal, currentToken, "invalid token in arg sequence");
+
+		fetchToken();
+
+		if(it + 1 != typeVec.end())
+			it++;
+	} while(true);
+
+	if(it + 1 != typeVec.end())
+		lerror(kE_Fatal, currentToken, "More types than args!");
+
+	fetchToken();
+
+	if(currentToken->mType != kToken_LCURLY)
+		lerror(kE_Fatal, currentToken, "expected curly bracket!");
+
+	fetchToken();
+
+	//Function() allocates mBody for us. (it also deletes it)
+	scopeStack.push_back(func->mBody);
+	parseIntoScope();
+	scopeStack.pop_back();
+
+	//done!
+}
+
+void
 Parser::parseIntoScope()
 {
 	Token* prevToken = currentToken;
@@ -172,7 +321,7 @@ Parser::parseIntoScope()
 		{
 			if(currentToken->mType == kToken_UNIQUE || currentToken->mType == kToken_SHARED)
 			{
-				goto handleType;
+				handleType();
 			}
 			else if(currentToken->mType == kToken_IF)
 			{
@@ -204,7 +353,9 @@ Parser::parseIntoScope()
 			}
 			else if(currentToken->mType == kToken_RETURN)
 			{
-
+				Return* tRotK = currentScope()->insertReturn();
+				fetchToken();
+				tRotK->expr = parseExpr();
 			}
 			else if(currentToken->mType == kToken_ENUM)
 			{
@@ -212,7 +363,7 @@ Parser::parseIntoScope()
 			}
 			else if(currentToken->mType == kToken_STRUCT)
 			{
-				
+
 			}
 			else if(currentToken->mType == kToken_USE)
 			{
@@ -241,16 +392,87 @@ Parser::parseIntoScope()
 		}
 		else if(currentToken->mCat == kCat_BasicType)
 		{
-			handleType:
-			std::vector<Type*> typeVec;
-			getTypeList(typeVec);
-
+			handleType();
 		}
 		else if(currentToken->mCat == kCat_WildIdentifier)
 		{
-			
+			Token* future = lookAhead(1);
+
+			if(future->mCat == kCat_WildIdentifier)
+			{
+				handleType();
+			}
+			else if(future->mType == kToken_DECLARE_EQUAL)
+			{
+				Variable* var = currentScope()->insertVariable(currentToken, nullptr);
+				
+				fetchToken();
+
+				var->mInitializer = parseExpr();
+			}
+			else if(future->mType == kToken_ASSIGN_EQUAL)
+			{
+				MultipleAssignment* multAss = currentScope()->insertMultipleAssignment();
+				multAss->names.push_back(currentToken->mStr);
+				multAss->expr = parseExpr();
+			}
+			else
+			{
+				int i = 0;
+				while(true)
+				{
+
+					if(lookAhead(i+1)->mType == kToken_ASSIGN_EQUAL)
+					{
+						MultipleAssignment* multAss = currentScope()->insertMultipleAssignment();
+						multAss->names.push_back(currentToken->mStr);
+						fetchToken();
+						while(currentToken->mType != kToken_ASSIGN_EQUAL)
+						{
+							fetchToken();
+							multAss->names.push_back(currentToken->mStr);
+							fetchToken();
+						}
+						//parse on the = sign
+						multAss->expr = parseExpr();
+						break;
+					}
+					else if(lookAhead(i+1)->mType == kToken_DECLARE_EQUAL)
+					{
+						DeclEqual* dEq = currentScope()->insertDeclEqual();
+						dEq->insert(currentToken->mStr);
+						fetchToken();
+						while(currentToken->mType != kToken_DECLARE_EQUAL)
+						{
+							fetchToken();
+							dEq->insert(currentToken->mStr);
+							fetchToken();
+						}
+						//parse on the := sign
+						dEq->mInitializer = parseExpr();
+						break;
+					}
+					else if(lookAhead(i+1)->mType != kToken_COMMA)
+					{
+						handleType();
+						break;
+					}
+					
+					i += 2;
+					
+					if(lookAhead(i)->mCat != kCat_WildIdentifier)
+					{
+						handleType();
+						break;
+					}
+
+				}
+			}
+			if(currentToken->mType != kToken_SEMICOLON)
+				lerror(kE_Fatal, currentToken, "Expected Semicolon!");
 		}
 
+		
 
 		if(prevToken == currentToken)
 		{

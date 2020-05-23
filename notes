@@ -1,0 +1,20 @@
+First Stage:
+- Implement Constructors - Will be a pain
+- contemplate using vectors beside BiMaps in Scope to speed up 2nd stage name lookup
+
+
+
+Second Stage:
+
+- Used Symbols:
+Variables cannot override functions, but a function in a nested scope can override a function in an outer scope (same with structs and enums);
+I am defering symbol checks to the second stage. Some may happen in the first stage parseIntoScope(), but it is not guareented. The parser will traverse the entire AST and keep a stack of the names linked to their declaration statements. This will verify all of the symbols declared in the program.
+
+- Function Calls:
+Every single function call statement will be placed into a vector. We will iterate these and find the appropriate function. 
+
+- Verify structMap, enumMap, functionMap, and unknownTypeMap:
+Make sure that all of these are defined.
+
+- Variable Types:
+Some variables will have a mType of nullptr. These variables must be typed. By now the second stage has already verified all of the FunctionCall statements and linked them to their appropriate functions. Now, in the nullptr variables, we will look up the type from the mInitializer and assign it to the appropriate variables.
