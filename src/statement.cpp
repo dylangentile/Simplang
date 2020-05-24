@@ -21,6 +21,7 @@ Scope::~Scope()
 {
 	for(Statement* state : statementVec)
 		delete state;
+
 	
 }
 
@@ -48,7 +49,7 @@ Scope::insertFunction(Token* tok)
 
 
 StructType* 
-Scope::insertStruct(Token* tok)
+Scope::insertStruct(Token* tok, bool isPublic)
 {
 	if(tok->mCat != kCat_WildIdentifier)
 		lerror(kE_Fatal, tok, "Invalid struct identifier symbol!");
@@ -58,6 +59,8 @@ Scope::insertStruct(Token* tok)
 
 
 	StructType* theStruct = new StructType(tok->mStr);
+	theStruct->definition = new Structure(tok->mStr, isPublic);
+	
 	structMap.insert(theStruct, tok->mStr);
 	return theStruct;
 
@@ -169,7 +172,8 @@ MultipleAssignment::~MultipleAssignment()
 
 
 
-Structure::Structure() : Statement(kState_Structure)
+Structure::Structure(const std::string& name_, bool isPublic_) 
+					: Statement(kState_Structure), name(name_), isPublic(isPublic_)
 {
 	
 }
@@ -250,6 +254,21 @@ Immediate::~Immediate()
 	}
 }
 
+StatementList::StatementList()
+{
+
+}
+
+StatementList::~StatementList()
+{
+	for(Statement* state : mVec)
+		delete state;
+}
+void 
+StatementList::insert(Statement* x)
+{
+	mVec.push_back(x);
+}
 
 
 

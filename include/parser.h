@@ -6,13 +6,15 @@
 
 #include <deque>
 
+inline bool isBinaryOperator(TokenType);
+
 class Parser
 {
 public:
 	Parser(const char* filename);
 	~Parser();
 
-	//it is up to the person outside the api to delete the scope
+	//it is up to the person outside the parser to delete the scope
 	Scope* parse();
 
 	std::string unitName;
@@ -30,7 +32,8 @@ private:
 
 	//parseExpr helpers
 	FunctionCall* parseFunctionCall();
-	Statement* parseExpr();
+	Statement* parseExpr(bool haltComma = false);
+	Statement* parseBinaryExpr(Statement* term1);
 	
 
 
@@ -40,7 +43,7 @@ private:
 
 	void parseStruct();
 	void parseFunction(const std::vector<Type*>& typeVec);
-	void handleType();
+	void handleType(std::vector<Variable*>* varVec = nullptr);
 
 	void parseIntoScope();
 

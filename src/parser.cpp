@@ -1,6 +1,16 @@
 #include "parser.h"
 #include "error.h"
 
+inline bool isBinaryOperator(TokenType x)
+{
+	return 		x == kToken_PLUS 		|| x == kToken_MINUS 
+			||	x == kToken_MULTIPLY 	|| x == kToken_DIVIDE
+			||  x == kToken_MODULO
+			||	x == kToken_LOGIC_EQUAL || x == kToken_NOT_EQUAL
+			||	x == kToken_LESS     	|| x == kToken_LESS_EQUAL
+			||	x == kToken_GREATER		|| x == kToken_GREATER_EQUAL;
+}
+
 Parser::Parser(const char* filename) : tokenVec(nullptr)
 {
 	mLexer = new Lexer(filename);
@@ -163,7 +173,7 @@ Parser::getTypeList(std::vector<Type*>& typeVec)
 
 
 void
-Parser::handleType()
+Parser::handleType(std::vector<Variable*>* varVec)
 {
 	std::vector<Type*> typeVec;
 	//todo:
@@ -183,7 +193,15 @@ Parser::handleType()
 		}
 		else
 		{
-			Variable* var = currentScope()->insertVariable(currentToken, typeVec[0]);
+			Variable* var = nullptr;
+			if(varVec == nullptr)
+			 	var = currentScope()->insertVariable(currentToken, typeVec[0]);
+			else
+			{
+				var = new Variable(currentToken->mStr, typeVec[0]);
+				varVec->push_back(var);
+			}
+			
 
 			fetchToken();
 
@@ -196,8 +214,7 @@ Parser::handleType()
 
 
 	}
-
-	if(currentToken->mType == kToken_COLON)
+	else if(currentToken->mType == kToken_COLON)
 	{
 		fetchToken();
 
@@ -209,7 +226,15 @@ Parser::handleType()
 		{
 			if(currentToken->mCat != kCat_WildIdentifier)
 				lerror(kE_Fatal, currentToken, "invalid variable token!");
-			Variable* var = currentScope()->insertVariable(currentToken, *it);
+			
+			Variable* var = nullptr;
+			if(varVec == nullptr)
+				currentScope()->insertVariable(currentToken, *it);
+			else
+			{
+				var = new Variable(currentToken->mStr, *it);
+				varVec->push_back(var);
+			}
 			
 			fetchToken();
 
@@ -234,16 +259,112 @@ Parser::handleType()
 	}
 }
 
-Statement* 
-Parser::parseExpr()
+Statement*
+Parser::parseBinaryExpr(Statement* term1)
 {
-	while(currentToken->mType != kToken_SEMICOLON)
-		fetchToken();
 
-	return nullptr;
 }
 
 
+Statement* 
+Parser::parseExpr(bool haltComma)
+{
+
+	Statement* operand1 = nullptr;
+	if(currentToken->mCat == kCat_WildIdentifier)
+	{
+		if(lookAhead(1)->mType == kToken_LPAREN)
+			operand1 = dynamic_cast<Statement*>(parseFunctionCall());
+	}
+
+	if(currentToken->mType == kToken_SEMICOLON)
+		return operand1;
+	
+	if(haltComma && currentToken->mType == kToken_COMMA)
+		return operand1;
+	else if(currentToken->mType == kToken_COMMA)
+	{
+		StatementList* list = new StatementList;
+		list->insert(operand1);
+
+		fetchToken();
+
+		while(currentToken->mType != kToken_SEMICOLON)
+		{
+			list->insert(parseExpr(true));
+			fetchToken();
+		}
+	}
+
+	if(isBinaryOperator(currentToken->mType))
+		operand1 = parseBinaryExpr(operand1); //will halt if it hits a comma or semicolon
+
+}
+
+
+void
+Parser::parseStruct()
+{
+	if(currentToken->mType != kToken_STRUCT)
+		lerror(kE_Fatal, currentToken, "expected 'struct' token!");
+
+
+	Token* name = fetchToken();
+
+	if(currentToken->mCat != kCat_WildIdentifier)
+		lerror(kE_Fatal, currentToken, "invalid struct name!");
+
+	fetchToken();
+
+	bool publicStruct = false;
+
+	if(currentToken->mType == kToken_COLON)
+	{
+		fetchToken();
+		if(currentToken->mType == kToken_PUBLIC)
+		{
+			publicStruct = true;
+		}
+		else if(currentToken->mType != kToken_PRIVATE)
+		{
+			lerror(kE_Fatal, currentToken, "invalid token! public or private expected");
+		}
+		fetchToken();
+	}
+
+
+	if(currentToken->mType != kToken_LCURLY)
+		lerror(kE_Fatal, currentToken, "expected l-curly bracket!");
+
+	fetchToken();
+
+	StructType* sType = currentScope()->insertStruct(name, publicStruct);
+	Structure* theStruct = sType->definition;
+
+	while(currentToken->mType != kToken_RCURLY)
+	{
+		handleType(&theStruct->members);
+		if(currentToken->mType == kToken_SEMICOLON)
+			fetchToken();
+		
+	}
+	fetchToken();
+
+	if(currentToken->mType != kToken_SEMICOLON)
+		lerror(kE_Fatal, currentToken, "missing semicolon!");
+
+	fetchToken();
+
+
+
+
+}
+
+FunctionCall*
+Parser::parseFunctionCall()
+{
+	return nullptr;
+}
 
 void
 Parser::parseFunction(const std::vector<Type*>& typeVec)
@@ -266,7 +387,7 @@ Parser::parseFunction(const std::vector<Type*>& typeVec)
 
 		
 
-	auto it = typeVec.begin();
+	auto it = argTypeVec.begin();
 
 	do
 	{
@@ -289,11 +410,11 @@ Parser::parseFunction(const std::vector<Type*>& typeVec)
 
 		fetchToken();
 
-		if(it + 1 != typeVec.end())
+		if(it + 1 != argTypeVec.end())
 			it++;
 	} while(true);
 
-	if(it + 1 != typeVec.end())
+	if(it + 1 != argTypeVec.end())
 		lerror(kE_Fatal, currentToken, "More types than args!");
 
 	fetchToken();
@@ -308,6 +429,8 @@ Parser::parseFunction(const std::vector<Type*>& typeVec)
 	parseIntoScope();
 	scopeStack.pop_back();
 
+	fetchToken();
+
 	//done!
 }
 
@@ -317,6 +440,12 @@ Parser::parseIntoScope()
 	Token* prevToken = currentToken;
 	while(currentToken != nullptr && currentToken != nullToken)
 	{
+
+		if(currentToken->mType == kToken_RCURLY)
+		{
+			break;
+		}
+
 		if(currentToken->mCat == kCat_Keyword)
 		{
 			if(currentToken->mType == kToken_UNIQUE || currentToken->mType == kToken_SHARED)
@@ -356,6 +485,9 @@ Parser::parseIntoScope()
 				Return* tRotK = currentScope()->insertReturn();
 				fetchToken();
 				tRotK->expr = parseExpr();
+				if(currentToken->mType != kToken_SEMICOLON)
+					lerror(kE_Fatal, currentToken, "expected semicolon");
+				fetchToken();
 			}
 			else if(currentToken->mType == kToken_ENUM)
 			{
@@ -363,7 +495,7 @@ Parser::parseIntoScope()
 			}
 			else if(currentToken->mType == kToken_STRUCT)
 			{
-
+				parseStruct();
 			}
 			else if(currentToken->mType == kToken_USE)
 			{
@@ -415,6 +547,10 @@ Parser::parseIntoScope()
 				MultipleAssignment* multAss = currentScope()->insertMultipleAssignment();
 				multAss->names.push_back(currentToken->mStr);
 				multAss->expr = parseExpr();
+
+				if(currentToken->mType != kToken_SEMICOLON)
+					lerror(kE_Fatal, currentToken, "Expected Semicolon!");
+				fetchToken();
 			}
 			else
 			{
@@ -467,9 +603,12 @@ Parser::parseIntoScope()
 					}
 
 				}
+				if(currentToken->mType != kToken_SEMICOLON)
+					lerror(kE_Fatal, currentToken, "Expected Semicolon!");
+				fetchToken();
 			}
-			if(currentToken->mType != kToken_SEMICOLON)
-				lerror(kE_Fatal, currentToken, "Expected Semicolon!");
+
+
 		}
 
 		
@@ -481,6 +620,9 @@ Parser::parseIntoScope()
 		}
 		prevToken = currentToken;
 	}
+
+	if(scopeStack.size() == 1 && currentToken != nullptr && currentToken != nullToken)
+		lerror(kE_Warning, nullptr, "Extra rcurly at end!");
 
 }
 

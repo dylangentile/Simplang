@@ -1,5 +1,5 @@
-unit main is private; //this is the "main" 'unit' of our 'program', and its members are 'private'
-import std.io;
+//unit main is private; //this is the "main" 'unit' of our 'program', and its members are 'private' by default
+//import std.io;
 
 //import "C"."header.h"; //I want the interface to look like this, but I haven't decided on the details yet
 //import "C" ptr malloc(size_t size); //single external declaration. The linker will look for this. This will work before the above works.

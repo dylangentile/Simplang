@@ -63,7 +63,7 @@ public:
 	bool usedSymbol(const std::string& name);
 	
 	Function* 			insertFunction(Token* tok);
-	StructType* 		insertStruct(Token* tok);
+	StructType* 		insertStruct(Token* tok, bool isPublic);
 	Variable* 			insertVariable(Token* tok, Type* type);
 	DeclEqual* 			insertDeclEqual();
 	MultipleAssignment*	insertMultipleAssignment();
@@ -125,9 +125,11 @@ public:
 class Structure : public Statement
 {
 public:
-	Structure();
+	Structure(const std::string& name_, bool isPublic_ = false);
 	~Structure();
 	std::vector<Variable*> members;
+	std::string name;
+	bool isPublic;
 	//TODO verify names on second pass
 };
 
@@ -166,7 +168,8 @@ public:
 	FunctionCall();
 	~FunctionCall();
 
-	Function* parentFunc;
+	Function* parentFunc;// 2nd stage
+	std::string callName;
 	std::vector<Statement*> args;
 };
 
@@ -211,6 +214,19 @@ public:
 		double dVal;
 
 	};
+};
+
+
+
+class StatementList
+{
+public:
+	StatementList();
+	~StatementList();
+
+	void insert(Statement* x);
+	std::vector<Statement*> mVec;
+
 };
 
 
