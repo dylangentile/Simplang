@@ -81,6 +81,18 @@ public:
 
 	}
 
+	bool contains(const T& key)
+	{
+		auto finder2 = map2.find(key);
+		return finder2 != map2.end();
+	}
+
+	bool contains(const K& key)
+	{
+		auto finder1 = map1.find(key);
+		return finder1 != map1.end();
+	}
+
 	//typename std::unordered_map<K, T, std::hash<HashK> >::iterator finder1;
 	//typename std::unordered_map<T, K, std::hash<HashT> >::iterator finder2;
 	std::unordered_map<K, T, std::hash<HashK> > map1;

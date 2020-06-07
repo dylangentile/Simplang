@@ -13,27 +13,73 @@ typedef enum
 	kState_NULL = 0,
 	kState_Scope,
 	kState_Variable,
+	kState_VariableAccess,
 	kState_Structure,
 	kState_Function,
 	kState_FunctionCall,
+
+	kState_If,
 	
 	kState_ImmediateExpr,
 	kState_BinOpExpr,
 	
 	kState_DeclEqual,
 	kState_MultipleAssignment,
-	kState_Return
+	kState_Return,
+
+	kState_StatementList,
+	kState_Term
 
 }StatementID;
 
 typedef enum
 {
+	kOp_NULL,
+
 	kOp_ADD,
 	kOp_SUB,
 	kOp_MUL,
 	kOp_DIV,
-	kOp_MOD
-}OperationID;
+	kOp_MOD,
+	
+	kOp_L_AND,
+	kOp_L_OR,
+	kOp_L_EQUAL,
+	kOp_L_NOT_EQUAL,
+
+	kOp_LESS,
+	kOp_GREATER,
+	kOp_LESS_EQUAL,
+	kOp_GREATER_EQUAL,
+
+	kOp_BIT_AND,
+	kOp_BIT_OR,
+
+	kOp_NULLCC //null collasesce
+}BinaryOperationID;
+
+
+typedef enum 
+{
+	kPreOp_NULL,
+	kPreOp_NOT, 	//!
+	kPreOp_NEG, 	//-
+	kPreOp_DEREF,	//*
+	kPreOp_COMPL,	//~
+	kPreOp_ADDROF,	//&
+	kPreOp_ATADDR	//@
+}PrefixOpID;
+
+typedef enum 
+{
+	kPostOp_NULL,
+	kPostOp_INCR, //++
+	kPostOp_DECR, //--
+	//kPostOp_ARRAY,
+	kPostOp_DOT,  //.
+	kPostOp_SFNAV //?.
+}PostfixOpID;
+
 
 class Function;
 class Variable;
@@ -68,6 +114,7 @@ public:
 	DeclEqual* 			insertDeclEqual();
 	MultipleAssignment*	insertMultipleAssignment();
 	Return*				insertReturn();
+	void				pushStatement(Statement*);
 
 	Type* getType(const std::string& name);
 
@@ -93,6 +140,7 @@ public:
 	Statement* mInitializer;
 
 };
+
 
 class DeclEqual : public Statement
 {
@@ -148,17 +196,51 @@ public:
 };
 
 
+class IfStatement : public Statement
+{
+public:
+	IfStatement();
+	~IfStatement();
+
+	Statement* condition;
+	Scope* mBody;
+	Statement* elseEval;
+
+};
+
+
 
 
 class BinOp : public Statement
 {
 public:
-	BinOp();
+	BinOp(const BinaryOperationID& op);
 	~BinOp();
 
-	OperationID mOp;
+	BinaryOperationID mOp;
 	Statement* operand1;
 	Statement* operand2;
+};
+
+class Term : public Statement
+{
+public:
+	Term();
+	~Term();
+
+	PrefixOpID 		preOp;
+	Statement* 		operand;
+	PostfixOpID 	postOp;
+};
+
+class VariableAccess : public Statement
+{
+public:
+	VariableAccess(const std::string& name);
+	~VariableAccess();
+
+	std::string mName;
+	Variable* refrencing;
 };
 
 
@@ -185,21 +267,18 @@ public:
 class Immediate : public Statement
 {
 public:
-	Immediate();
+	Immediate(BasicType* type);
 	~Immediate();
-	Type* mType;
+	BasicType* mType;
 
 	union
 	{
 		uint64_t u64;
 		uint32_t u32;
 		uint16_t u16;
-		union
-		{
-			uint8_t u8;
-			uint8_t byte;
-			uint8_t boolean;
-		};
+		uint8_t u8;
+		uint8_t byte;
+		
 
 		int64_t i64;
 		int32_t i32;
@@ -213,12 +292,18 @@ public:
 		float fVal;
 		double dVal;
 
+		bool boolVal;
+
 	};
+
+	std::string ogString;
+
+	bool parseValue(const std::string& valStr);
 };
 
 
 
-class StatementList
+class StatementList : public Statement
 {
 public:
 	StatementList();

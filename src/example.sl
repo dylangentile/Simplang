@@ -150,7 +150,7 @@ main(string[] argv)
 
 	MyStruct* k = nullptr;
 	w := k?.id; //safe navigation operator '?.'
-	if(isNull(w)) //isNull operator
+	if(isnull(w)) //isNull operator
 	{
 		w = 42;
 	}

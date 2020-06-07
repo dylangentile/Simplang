@@ -6,7 +6,7 @@ inline void printTabs(int x)
 {
 	for(int i = 0; i < x; i++) printf("\t");
 }
-
+void printScope(Scope* scope, int tabs = 0);
 
 
 void printType(Type* t)
@@ -64,7 +64,103 @@ void printTypeVec(const std::vector<Type*>& typeVec)
 	}
 }
 
-void printScope(Scope* scope, int tabs = 0)
+void printStatement(Statement* state, int tabs)
+{
+	printTabs(tabs);
+
+	if(state->mId == kState_NULL)
+	{
+		printf("NULL");
+	}
+	else if(state->mId == kState_Scope)
+	{
+		printScope(dynamic_cast<Scope*>(state), tabs + 1);
+	}
+	else if(state->mId == kState_Variable)
+	{
+		Variable* var = dynamic_cast<Variable*>(state);
+		printType(var->mType);
+		printf("Variable %s", var->mName.c_str());
+
+		if(var->mInitializer != nullptr)
+		{
+			printf(" = ");
+			printStatement(var->mInitializer, tabs);
+		}
+	}
+	else if(state->mId == kState_Return)
+	{
+		printf("return ");
+	}
+	else if(state->mId == kState_DeclEqual)
+	{
+		DeclEqual* dEq = dynamic_cast<DeclEqual*>(state);
+
+		for(Variable* var : dEq->varVec)
+		{
+			printType(var->mType);
+			printf("%s ", var->mName.c_str());
+		}
+		printf(":= ");
+		//print expr
+	}
+	else if(state->mId == kState_BinOpExpr)
+	{
+		BinOp* theOp = dynamic_cast<BinOp*>(state);
+		printStatement(theOp->operand1, 0);
+		printStatement(theOp->operand2, 0);
+
+		switch(theOp->mOp)
+		{
+			case kOp_ADD: printf("+ ");
+			break;
+			case kOp_SUB: printf("- ");
+			break;
+			case kOp_MUL: printf("* ");
+			break;
+			case kOp_DIV: printf("/ ");
+			break;
+			case kOp_MOD: printf("%% ");
+			break;
+
+			case kOp_L_AND: printf("&& ");
+			break;
+			case kOp_L_OR: printf("|| ");
+			break;
+			case kOp_L_EQUAL: printf("== ");
+			break;
+			case kOp_L_NOT_EQUAL: printf("!= ");
+			break;
+
+			case kOp_LESS: printf("< ");
+			break;
+			case kOp_GREATER: printf("> ");
+			break;
+			case kOp_LESS_EQUAL: printf("<= ");
+			break;
+			case kOp_GREATER_EQUAL: printf(">= ");
+			break;
+
+			case kOp_BIT_AND: printf("& ");
+			break;
+			case kOp_BIT_OR: printf("| ");
+			break;
+
+			case kOp_NULLCC: printf("?? ");
+			break;
+		}
+
+	}
+	else if(state->mId == kState_ImmediateExpr)
+	{
+		Immediate* val = dynamic_cast<Immediate*>(state);
+		printf("%s ", val->ogString.c_str());
+	}
+	
+
+}
+
+void printScope(Scope* scope, int tabs)
 {
 
 	for(auto it = scope->structMap.map1.begin(); it != scope->structMap.map1.end(); it++)
@@ -97,39 +193,7 @@ void printScope(Scope* scope, int tabs = 0)
 
 	for(Statement* state : scope->statementVec)
 	{
-		printTabs(tabs);
-
-		if(state->mId == kState_NULL)
-		{
-			printf("NULL");
-		}
-		else if(state->mId == kState_Scope)
-		{
-			printScope(dynamic_cast<Scope*>(state), tabs + 1);
-		}
-		else if(state->mId == kState_Variable)
-		{
-			Variable* var = dynamic_cast<Variable*>(state);
-			printType(var->mType);
-			printf("Variable %s", var->mName.c_str());
-		}
-		else if(state->mId == kState_Return)
-		{
-			printf("return ");
-		}
-		else if(state->mId == kState_DeclEqual)
-		{
-			DeclEqual* dEq = dynamic_cast<DeclEqual*>(state);
-
-			for(Variable* var : dEq->varVec)
-			{
-				printType(var->mType);
-				printf("%s ", var->mName.c_str());
-			}
-			printf(":= ");
-			//print expr
-		}
-
+		printStatement(state, tabs);
 		printf("\n");
 	}
 

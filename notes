@@ -1,7 +1,7 @@
 First Stage:
 - Implement Constructors - Will be a pain
 - contemplate using vectors beside BiMaps in Scope to speed up 2nd stage name lookup
-
+- implement arrays '[]'
 
 
 Second Stage:

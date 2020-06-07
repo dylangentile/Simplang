@@ -6,7 +6,6 @@
 
 #include <deque>
 
-inline bool isBinaryOperator(TokenType);
 
 class Parser
 {
@@ -33,8 +32,10 @@ private:
 	//parseExpr helpers
 	FunctionCall* parseFunctionCall();
 	Statement* parseExpr(bool haltComma = false);
-	Statement* parseBinaryExpr(Statement* term1);
+	Statement* parseBinExpr();
+	Statement* parseTerm();
 	
+	Statement* parseIfStatement();
 
 
 	Variable* fetchNextVariable(Type* theType);
@@ -45,6 +46,7 @@ private:
 	void parseFunction(const std::vector<Type*>& typeVec);
 	void handleType(std::vector<Variable*>* varVec = nullptr);
 
+	void initScopeParse(Scope*);
 	void parseIntoScope();
 
 	bool checkRedeclaration(const std::string& name, bool doError = true);
@@ -69,4 +71,23 @@ private:
 
 	BiMap<TokenType, Type*, int, Type*> typeMap;
 	std::unordered_map<Type*, Type*> ptrTypeMap;
+
+	BiMap<TokenType, PrefixOpID, int, int> preOpMap;
+	BiMap<TokenType, PostfixOpID, int, int> postOpMap;
+
+	BiMap<TokenType, BinaryOperationID, int, int> binOpMap;
+
+
 };
+
+
+
+
+
+
+
+
+
+
+
+

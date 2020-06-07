@@ -125,6 +125,12 @@ Scope::getType(const std::string& name)
 
 }
 
+void
+Scope::pushStatement(Statement* x)
+{
+	statementVec.push_back(x);
+}
+
 Variable::Variable(const std::string& name, Type* type) 
 	: Statement(kState_Variable), mName(name), mType(type), mInitializer(nullptr)
 {
@@ -200,7 +206,22 @@ Function::~Function()
 }
 
 
-BinOp::BinOp() : Statement(kState_BinOpExpr)
+IfStatement::IfStatement() : Statement(kState_If), condition(nullptr), elseEval(nullptr)
+{
+	mBody = new Scope();
+}
+
+IfStatement::~IfStatement()
+{
+
+}
+
+
+
+
+
+
+BinOp::BinOp(const BinaryOperationID& op) : Statement(kState_BinOpExpr), mOp(op),  operand1(nullptr), operand2(nullptr)
 {
 
 }
@@ -209,6 +230,27 @@ BinOp::~BinOp()
 {
 	delete operand1;
 	delete operand2;
+}
+
+
+Term::Term() : Statement(kState_Term), preOp(kPreOp_NULL), operand(nullptr), postOp(kPostOp_NULL)
+{
+
+}
+
+Term::~Term()
+{
+	delete operand;
+}
+
+VariableAccess::VariableAccess(const std::string& name) : Statement(kState_VariableAccess), mName(name), refrencing(nullptr)
+{
+
+}
+
+VariableAccess::~VariableAccess()
+{
+	//don't delete Variable* VariableAccess::refrencing, it's a refrence!
 }
 
 
@@ -235,26 +277,70 @@ Return::~Return()
 	delete expr;
 }
 
-Immediate::Immediate() : Statement(kState_ImmediateExpr), str(nullptr)
+Immediate::Immediate(BasicType* type) : Statement(kState_ImmediateExpr), mType(type), u64(0)
 {
 
 }
 
 Immediate::~Immediate()
 {
-	//todo, delete the right thing
-	if(mType->mId == kType_Basic)
+	
+	if(mType->basicId == kBaseT_STRING)
 	{
-		BasicType* x = dynamic_cast<BasicType*>(mType);
-		if(x->basicId == kBaseT_STRING)
-		{
-			if(str != nullptr)
-				delete str;
-		}
+		if(str != nullptr)
+			delete str;
 	}
+	
 }
 
-StatementList::StatementList()
+//todo: proper error handling from here
+bool 
+Immediate::parseValue(const std::string& valStr)
+{
+	try
+	{
+		if(mType->basicId == kBaseT_STRING)
+		{
+			//todo: parse \n \\ \t etc
+			memcpy(str, valStr.c_str(), valStr.size());
+		}
+		else if(mType->basicId == kBaseT_BOOL)
+		{
+			if(valStr == "true")
+				boolVal = true;
+			else if(valStr == "false")
+				boolVal = false;
+			else
+				return false; //not a boolean value!
+		}
+		else if(mType->basicId == kBaseT_SINGLE)
+		{
+			fVal = std::stof(valStr);
+		}
+		else if(mType->basicId == kBaseT_DOUBLE)
+		{
+			dVal = std::stod(valStr);
+		}
+		else //must be a number
+		{
+			u64 = std::stoull(valStr);
+		}
+
+		ogString = valStr;
+	}
+	catch (const std::invalid_argument& e)
+	{
+		return false;
+	}
+	catch(const std::out_of_range& e)
+	{
+		return false;
+	}
+	return true;
+	
+}
+
+StatementList::StatementList() : Statement(kState_StatementList)
 {
 
 }
@@ -269,7 +355,6 @@ StatementList::insert(Statement* x)
 {
 	mVec.push_back(x);
 }
-
 
 
 

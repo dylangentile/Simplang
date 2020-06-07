@@ -1,15 +1,73 @@
 #include "parser.h"
 #include "error.h"
 
-inline bool isBinaryOperator(TokenType x)
+#include <stack>
+
+int
+getOperatorPrecedence(const BinaryOperationID& x)
 {
-	return 		x == kToken_PLUS 		|| x == kToken_MINUS 
-			||	x == kToken_MULTIPLY 	|| x == kToken_DIVIDE
-			||  x == kToken_MODULO
-			||	x == kToken_LOGIC_EQUAL || x == kToken_NOT_EQUAL
-			||	x == kToken_LESS     	|| x == kToken_LESS_EQUAL
-			||	x == kToken_GREATER		|| x == kToken_GREATER_EQUAL;
+	switch(x)
+	{
+		case kOp_ADD:
+		case kOp_SUB: return 6;
+		break;
+
+		case kOp_MUL: 
+		case kOp_DIV:
+		case kOp_MOD: return 5;
+		break;
+
+		case kOp_L_AND: return 14;
+		break;
+		case kOp_L_OR: return 15; //this and this or this // read as (this and this) or this
+		break;
+
+		case kOp_L_EQUAL:
+		case kOp_L_NOT_EQUAL: return 10;
+		break;
+		
+		case kOp_LESS: 
+		case kOp_GREATER:
+		case kOp_LESS_EQUAL:
+		case kOp_GREATER_EQUAL: return 9;
+		break;
+		
+		case kOp_BIT_AND: return 11;
+		break;
+		case kOp_BIT_OR: return 12;
+		break;
+		
+		case kOp_NULLCC: return 16;
+		break;
+		case kOp_NULL: lerror(kE_Fatal, nullptr, "invalid call!");
+	}
+
+	lerror(kE_Fatal, nullptr, "invalid call!");
+	return 1000000; //to shut up clang
+
 }
+
+
+
+bool
+isPrefixUnaryOperator(Token* tok) // ! - * ~ & @
+{
+	return 		tok->mType == kToken_NOT 		|| tok->mType == kToken_MINUS
+			||	tok->mType == kToken_MULTIPLY	|| tok->mType == kToken_BIT_COMPL
+			||	tok->mType == kToken_BIT_AND	|| tok->mType == kToken_ADDR;
+
+}
+
+bool
+isPostfixUnaryOperator(Token* tok) // ++ -- [] . ?. 
+{
+	return 		tok->mType == kToken_INCREMENT 	|| tok->mType == kToken_DECREMENT
+		  /*||	tok->mType == kToken_RBRACKET*/	|| tok->mType == kToken_DOT
+			||	tok->mType == kToken_SFNAV;
+}
+
+
+
 
 Parser::Parser(const char* filename) : tokenVec(nullptr)
 {
@@ -36,6 +94,47 @@ Parser::Parser(const char* filename) : tokenVec(nullptr)
 
 	typeMap.insert(kToken_DYNAMIC, new BasicType(kBaseT_DYNAMIC));
 	typeMap.insert(kToken_TYPENAME, new BasicType(kBaseT_TYPENAME));
+
+
+	preOpMap.insert(kToken_NOT, kPreOp_NOT);
+	preOpMap.insert(kToken_MINUS, kPreOp_NEG);
+	preOpMap.insert(kToken_MULTIPLY, kPreOp_DEREF);
+	preOpMap.insert(kToken_BIT_COMPL, kPreOp_COMPL);
+	preOpMap.insert(kToken_BIT_AND, kPreOp_ADDROF);
+	preOpMap.insert(kToken_ADDR, kPreOp_ATADDR);
+
+
+
+	postOpMap.insert(kToken_INCREMENT, kPostOp_INCR);
+	postOpMap.insert(kToken_DECREMENT, kPostOp_DECR);
+	postOpMap.insert(kToken_DOT, kPostOp_DOT);
+	postOpMap.insert(kToken_SFNAV, kPostOp_SFNAV);
+
+
+
+	binOpMap.insert(kToken_PLUS, kOp_ADD);
+	binOpMap.insert(kToken_MINUS, kOp_SUB);
+	binOpMap.insert(kToken_MULTIPLY, kOp_MUL);
+	binOpMap.insert(kToken_DIVIDE, kOp_DIV);
+	binOpMap.insert(kToken_MODULO, kOp_MOD);
+
+	binOpMap.insert(kToken_LOGIC_AND, kOp_L_AND);
+	binOpMap.insert(kToken_LOGIC_OR, kOp_L_OR);
+	binOpMap.insert(kToken_LOGIC_EQUAL, kOp_L_EQUAL);
+	binOpMap.insert(kToken_NOT_EQUAL, kOp_L_NOT_EQUAL);
+
+	binOpMap.insert(kToken_LESS, kOp_LESS);
+	binOpMap.insert(kToken_GREATER, kOp_GREATER);
+	binOpMap.insert(kToken_LESS_EQUAL, kOp_LESS_EQUAL);
+	binOpMap.insert(kToken_GREATER_EQUAL, kOp_GREATER_EQUAL);
+
+	binOpMap.insert(kToken_BIT_AND, kOp_BIT_AND);
+	binOpMap.insert(kToken_BIT_OR, kOp_BIT_OR);
+
+	binOpMap.insert(kToken_NULLCC, kOp_NULLCC);
+
+
+
 
 	nullToken = &theActualNullToken;
 
@@ -176,7 +275,7 @@ void
 Parser::handleType(std::vector<Variable*>* varVec)
 {
 	std::vector<Type*> typeVec;
-	//todo:
+	//todo: Type Initializers
 	//std::vector<Immediate*>  immediateVec;
 	getTypeList(typeVec/*,immediateVec*/ );
 
@@ -207,9 +306,6 @@ Parser::handleType(std::vector<Variable*>* varVec)
 
 			if(currentToken->mType == kToken_ASSIGN_EQUAL)
 				var->mInitializer = parseExpr();
-
-			if(currentToken->mType != kToken_SEMICOLON)
-				lerror(kE_Fatal, currentToken, "missing semicolon!");
 		}
 
 
@@ -239,7 +335,7 @@ Parser::handleType(std::vector<Variable*>* varVec)
 			fetchToken();
 
 			if(currentToken->mType == kToken_ASSIGN_EQUAL)
-				var->mInitializer = parseExpr();
+				var->mInitializer = parseExpr(true);
 
 
 			if(currentToken->mType == kToken_SEMICOLON)
@@ -259,9 +355,237 @@ Parser::handleType(std::vector<Variable*>* varVec)
 	}
 }
 
+/*
+Possible cases
+
+let + = all binary operators
+
+op:	case:
++ 	(
++ 	var
++ 	var++
++ 	func()
++	(unaryPrefix)case
++ 	case(unaryPostfix)
+
+
+//binop case higher-precedence
++ case *
+//binop case lower-precedence
++ case &&
++ case )
++ case ,
++ case ;
+
+
+steps:
+1. parse case
+2. read next operator
+3. recurse or return
+
+
+*/
+
+
+//This function makes me want to tear my hair out... (but it works[I think...])
 Statement*
-Parser::parseBinaryExpr(Statement* term1)
+Parser::parseTerm()
 {
+
+	Statement* theTerm = nullptr;
+
+	//variable,  
+
+	if(isPrefixUnaryOperator(currentToken))
+	{
+		Term* term = new Term();
+		term->preOp = *preOpMap[currentToken->mType];
+		theTerm = dynamic_cast<Statement*>(term);
+		fetchToken();
+	} 
+
+	if(currentToken->mCat == kCat_WildIdentifier)
+	{
+		Statement* result = nullptr;
+		
+
+		if(lookAhead(1)->mType == kToken_LPAREN)
+		{
+			result = dynamic_cast<Statement*>(parseFunctionCall());
+		}
+		else
+		{
+			result = dynamic_cast<Statement*> (new VariableAccess(currentToken->mStr));	
+			fetchToken();
+		}
+
+		if(theTerm == nullptr)
+		{
+			theTerm = result;
+		}
+		else
+		{
+			Term* term = dynamic_cast<Term*>(theTerm);
+			term->operand = result;
+
+		}
+
+	}
+	else if(currentToken->mCat == kCat_Immediate)
+	{
+		if(theTerm != nullptr)
+			lerror(kE_Fatal, currentToken, "cannot use prefix operator on immediate values!");
+
+		Type** tfinder = typeMap[currentToken->mType];
+		if(tfinder == nullptr)
+			lerror(kE_Fatal, currentToken, "compiler error, miscategorization or un-implemented type!");
+
+		if((*tfinder)->mId != kType_Basic)
+			lerror(kE_Fatal, currentToken, "compiler error! somehow this got categorized as a non-basic type immediate!");
+
+		Immediate* val = new Immediate(dynamic_cast<BasicType*>(*tfinder));
+		if(!val->parseValue(currentToken->mStr))
+			lerror(kE_Fatal, currentToken, "invalid immediate value!");
+
+		theTerm = dynamic_cast<Statement*>(val);
+	}
+	else
+	{
+		lerror(kE_Fatal, currentToken, "token isn't valid term in expresion sequence!");
+	}
+
+
+
+	if(isPostfixUnaryOperator(currentToken))
+	{
+		if(theTerm->mId == kState_ImmediateExpr)
+			lerror(kE_Fatal, currentToken, "cannot use postfix operator on immdiate values!");
+		Term* term = nullptr;
+		if(theTerm->mId != kState_Term)
+		{
+			term = new Term();
+			term->operand = theTerm;
+		}
+		else
+		{
+			term = dynamic_cast<Term*>(theTerm);
+		}
+
+		term->postOp = *postOpMap[currentToken->mType];
+
+		fetchToken();
+
+	}
+
+	return theTerm;
+
+}
+
+//https://en.wikipedia.org/wiki/Shunting-yard_algorithm
+//should enter with first term
+Statement*
+Parser::parseBinExpr()
+{
+	std::deque<Statement*> outputDeque;
+	std::stack<TokenType> operatorStack;
+
+	Token* errorToken = currentToken;
+
+	while(	currentToken->mType != kToken_SEMICOLON && currentToken->mType != kToken_COMMA
+		&&	currentToken->mType != kToken_LCURLY) //if statement
+	{
+		BinaryOperationID* id = binOpMap[currentToken->mType];
+		if(id != nullptr)
+		{
+			while(	   !operatorStack.empty()
+					&& binOpMap.contains(operatorStack.top())
+					&& (getOperatorPrecedence(*id) > getOperatorPrecedence(*binOpMap[operatorStack.top()]))
+				 )
+			{
+				BinaryOperationID* operatorEnum = binOpMap[operatorStack.top()];
+				operatorStack.pop();
+				
+				if(operatorEnum == nullptr)
+					lerror(kE_Fatal, errorToken, "parseBinExpr failed!");
+
+				BinOp* theOp = new BinOp(*operatorEnum);
+
+				if(outputDeque.size() < 2)
+					lerror(kE_Fatal, errorToken, "parseBinExpr failed! WTF");
+
+				theOp->operand2 = outputDeque.back(); outputDeque.pop_back();
+				theOp->operand1 = outputDeque.back(); outputDeque.pop_back();
+
+				outputDeque.push_back(dynamic_cast<Statement*>(theOp));
+			}
+
+			operatorStack.push(currentToken->mType);
+		}
+		else if(currentToken->mType == kToken_LPAREN)
+		{
+			operatorStack.push(currentToken->mType);
+		}
+		else if(currentToken->mType == kToken_RPAREN)
+		{
+			while(operatorStack.top() != kToken_LPAREN)
+			{
+				
+				BinaryOperationID* operatorEnum = binOpMap[operatorStack.top()];
+				operatorStack.pop();
+				
+				if(operatorEnum == nullptr)
+					lerror(kE_Fatal, errorToken, "parseBinExpr failed!");
+
+				BinOp* theOp = new BinOp(*operatorEnum);
+
+				if(outputDeque.size() < 2)
+					lerror(kE_Fatal, errorToken, "parseBinExpr failed! WTF");
+
+				theOp->operand2 = outputDeque.back(); outputDeque.pop_back();
+				theOp->operand1 = outputDeque.back(); outputDeque.pop_back();
+
+				if(operatorStack.empty())
+					lerror(kE_Fatal, errorToken, "mismatched parentheses!");
+
+				outputDeque.push_back(dynamic_cast<Statement*>(theOp));
+
+
+			}
+
+			operatorStack.pop(); //pop the lParen
+		}
+		else //must be a term or throw error
+		{
+			outputDeque.push_back(parseTerm());
+		}
+
+		fetchToken();
+
+	}
+
+	while(!operatorStack.empty())
+	{
+		BinaryOperationID* operatorEnum = binOpMap[operatorStack.top()];
+		operatorStack.pop();
+		
+		if(operatorEnum == nullptr)
+			lerror(kE_Fatal, errorToken, "parseBinExpr failed!");
+
+		BinOp* theOp = new BinOp(*operatorEnum);
+
+		if(outputDeque.size() < 2)
+			lerror(kE_Fatal, errorToken, "parseBinExpr failed! WTF");
+
+		theOp->operand2 = outputDeque.back(); outputDeque.pop_back();
+		theOp->operand1 = outputDeque.back(); outputDeque.pop_back();
+
+		outputDeque.push_back(dynamic_cast<Statement*>(theOp));
+	}
+
+	if(outputDeque.size() != 1)
+		lerror(kE_Fatal, errorToken, "bad expression!");
+
+	return outputDeque[0];
 
 }
 
@@ -270,35 +594,25 @@ Statement*
 Parser::parseExpr(bool haltComma)
 {
 
-	Statement* operand1 = nullptr;
-	if(currentToken->mCat == kCat_WildIdentifier)
-	{
-		if(lookAhead(1)->mType == kToken_LPAREN)
-			operand1 = dynamic_cast<Statement*>(parseFunctionCall());
-	}
-
-	if(currentToken->mType == kToken_SEMICOLON)
-		return operand1;
-	
-	if(haltComma && currentToken->mType == kToken_COMMA)
-		return operand1;
-	else if(currentToken->mType == kToken_COMMA)
-	{
-		StatementList* list = new StatementList;
-		list->insert(operand1);
-
+	if(currentToken->mType == kToken_ASSIGN_EQUAL)
 		fetchToken();
 
+	Statement* x = parseBinExpr();
+
+	if(currentToken->mType == kToken_COMMA && !haltComma)
+	{
+		StatementList* myList = new StatementList();
 		while(currentToken->mType != kToken_SEMICOLON)
 		{
-			list->insert(parseExpr(true));
-			fetchToken();
+			myList->insert(parseBinExpr());
 		}
+
+		x = dynamic_cast<Statement*>(myList);
 	}
 
-	if(isBinaryOperator(currentToken->mType))
-		operand1 = parseBinaryExpr(operand1); //will halt if it hits a comma or semicolon
+	fetchToken(); //must be a semicolon
 
+	return x;
 }
 
 
@@ -419,20 +733,63 @@ Parser::parseFunction(const std::vector<Type*>& typeVec)
 
 	fetchToken();
 
-	if(currentToken->mType != kToken_LCURLY)
-		lerror(kE_Fatal, currentToken, "expected curly bracket!");
-
-	fetchToken();
-
-	//Function() allocates mBody for us. (it also deletes it)
-	scopeStack.push_back(func->mBody);
-	parseIntoScope();
-	scopeStack.pop_back();
-
-	fetchToken();
+	initScopeParse(func->mBody);
 
 	//done!
 }
+
+Statement*
+Parser::parseIfStatement()
+{
+	if(currentToken->mType != kToken_IF)
+		lerror(kE_Fatal, currentToken, "expected if statement!");
+
+	fetchToken();
+	if(currentToken->mType != kToken_LPAREN)
+		lerror(kE_Fatal, currentToken, "expected left parenthesis!")
+
+	IfStatement* theIf = new IfStatement();
+	theIf->condition = parseBinExpr();
+	initScopeParse(theIf->mBody);
+
+	if(currentToken->mType == kToken_ELSE)
+	{
+		fetchToken();
+		if(currentToken->mType == kToken_IF)
+		{
+			theIf->elseEval = parseIfStatement();
+		}
+		else if(currentToken->mType == kToken_LCURLY)
+		{
+			Scope* elseScope = new Scope();
+			initScopeParse(elseScope);
+			theIf->elseEval = dynamic_cast<Statement*>(elseScope);
+		}
+		else
+		{
+			lerror(kE_Fatal, currentToken, "expected 'if' or '{' !");
+		}
+	}
+
+	return dynamic_cast<Statement*>(theIf);
+}
+
+
+void
+Parser::initScopeParse(Scope* scope)
+{
+	if(currentToken->mType != kToken_LCURLY)
+					lerror(kE_Fatal, currentToken, "expected left curly!");
+
+	fetchToken();
+
+	scopeStack.push_back(scope);
+	parseIntoScope();
+	scopeStack.pop_back();
+
+	fetchToken(); //fetch past rcurly
+}
+
 
 void
 Parser::parseIntoScope()
@@ -454,11 +811,11 @@ Parser::parseIntoScope()
 			}
 			else if(currentToken->mType == kToken_IF)
 			{
-
+				currentScope()->pushStatement(parseIfStatement());
 			}
 			else if(currentToken->mType == kToken_ELSE)
 			{
-
+				lerror(kE_Fatal, currentToken, "floating else! No if preceding it!");
 			}
 			else if(currentToken->mType == kToken_FOR)
 			{
@@ -485,9 +842,6 @@ Parser::parseIntoScope()
 				Return* tRotK = currentScope()->insertReturn();
 				fetchToken();
 				tRotK->expr = parseExpr();
-				if(currentToken->mType != kToken_SEMICOLON)
-					lerror(kE_Fatal, currentToken, "expected semicolon");
-				fetchToken();
 			}
 			else if(currentToken->mType == kToken_ENUM)
 			{
@@ -548,9 +902,6 @@ Parser::parseIntoScope()
 				multAss->names.push_back(currentToken->mStr);
 				multAss->expr = parseExpr();
 
-				if(currentToken->mType != kToken_SEMICOLON)
-					lerror(kE_Fatal, currentToken, "Expected Semicolon!");
-				fetchToken();
 			}
 			else
 			{
@@ -603,9 +954,7 @@ Parser::parseIntoScope()
 					}
 
 				}
-				if(currentToken->mType != kToken_SEMICOLON)
-					lerror(kE_Fatal, currentToken, "Expected Semicolon!");
-				fetchToken();
+				
 			}
 
 

@@ -10,9 +10,9 @@ Simplang is statically typed. The basic types are:
 
 Along with the pointer types (where `T` is a type)
 
-	`T*`, `unique T*`, `shared T*`,
+	`T*`, `unique T*`, `shared T*`, `fancy T*`
 
-The unique pointer and shared pointer behave as you might expect. By default all types imply mutability. (except certain restrictions from unique and shared pointers) `const` can be used to specify immutability.
+The unique pointer and shared pointer behave as you might expect. By default all types imply mutability. (except certain restrictions from unique and shared pointers) `const<T>` can be used to specify immutability.
 
 Simplang allows user defined types in the form of structs:
 
@@ -24,9 +24,10 @@ struct MyStruct
 };
 ```
 
-Simplang structs do not inherit, they are not polymorphic, and cannot have any member functions (as of right now). An exception to the member function rule is the allowance of constructors and destructors (they are not required).
+Simplang structs do not inherit, they are not polymorphic, and cannot have any member functions.
+All members of structs are public w/i the module.
 
-All members of structs are public (for now. Maybe friend functions for private?)
+That is, `struct MyStruct : private` means that the struct is private to other modules, but its members all still public
 
 
 ### Detailed types:
@@ -42,11 +43,10 @@ Note that the parser always substitutes `int` with `int32`
 
 
 ### On const
-<b>NOTE:</b> I think this is ugly and I won't implement it unless I can't come up with a better way to do this. I also don't like the `&mut` crap from rust so don't expect that.
 
-- `const T*` is a immutable pointer to a mutable piece of data of type `T`. Can be read as an 'immutable, T pointer';
-- `(const T)*`  is a mutable pointer to an immutable piece of data. Can be read as an `immutable T, pointer`
-- `const (const T)*` or `const const T*` 
+const<T\*> x;
+const<T>*  z;
+const_twice<T\*> y; //const T const* 
 
 ## Variables
 In Simplang variables are defined by a type, and a symbol, in the form of:
@@ -56,11 +56,11 @@ or in the advanced form
 
 	`T1, T2 : S1, S2;`
 
-with n types and symbols
+with n types and n symbols
 
-If the elipsis is used it means that all further symbols have the type preceding the elipsis:
+If there are less types than symbols, all of the later symbols will get the last type. This is not reccomended usage, execpt for when there is one type.
 
-	`T1, T2, T3... : S1, S2, S3, S4, S5;`
+	`T1, T2, T3 : S1, S2, S3, S4, S5;`
 
 For now valid variable symbols include A-Z, a-z, 0-9, and \_. I plan on extending this to unicode but for now this is fine.
 
@@ -71,12 +71,12 @@ Every Basic type has a defined default intialization, and uninitialized variable
 The default initializations are as follows
 
 For any numeric type (int8-int64, uint8-uint64, float, double, byte), it must default intialize to zero, `0`.
-Char is by default U+0020 or ' '.
+Char is by default U+0000 or '\0'.
 
 string is `""`.
 bool is `false`
-raw pointers are `nullptr`
-shared and unique pointers must be explicitly intialized!
+raw pointers are `nullptr` //however the compiler will give a warning for uninitialized pointers! Just because you can doesn't mean you should
+fancy, shared, and unique pointers must be explicitly intialized!
 
 #### Struct Intialization
 In a struct you can intialize in place:
@@ -196,20 +196,22 @@ The way the compiler finds the appropriate override is by hiking back up the sta
 ## Memory
 It is reccomended to use `unique T*` and `shared T*` wherever possible, since they clean themselves up using simple refrence counting (Meaning there are still possible bugs...). Simplang doesn't implement garbage collection, nor is it planned to, so proceed at your own risk. 
 
+
+### "Fancy Pointers"
+One class "owns" the fancy pointer, and this class is responsible for destroying it. Other classes get a fancy "ref" wrapper. "ref" wrappers cannot be free-ed, and will be converted to null when the fancy pointer is free-ed. The `&` and `.` operators cannot be used with fancy refs. Instead use `@` and `?.`
+
+
 ## In Contention
 
 ### Active Proposals
-- Reflection in structs
 - `defer`/`panic` from golang
-- char - unicode-8 support
+- char - utf8 support
 
 ### Active debates
 - struct method functions vs golang interfaces? (definitely not Rust traits(those suck!))
 - private members of struct and friend functions?
 
 
-### Reflection "Proposal"
-To Simplang reflection would look like adding an additional member variable to a struct or defining a new struct, all in runtime. I will work on the details of this, but I want it to be paid for only if you use it, so I'm going to implement the language as-is without this feature for now, and then I will add the reflection system.
 
 ### "typename" and "dynamic"
 These keywords are reserved. I do not plan on implementing `dynamic` for now, but it's a possibility. `typename` will exist for the Generics system, and for the reflection system.

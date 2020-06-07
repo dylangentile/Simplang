@@ -49,6 +49,7 @@ typedef enum
 	kToken_PTR,
 	kToken_UNIQUE,
 	kToken_SHARED,
+	kToken_FANCY,
 
 	kToken_IF,
 	kToken_ELSE,

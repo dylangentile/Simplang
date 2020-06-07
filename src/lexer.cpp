@@ -41,6 +41,7 @@ Lexer::Lexer(const char* filename)
 	typeMap.insert(kToken_PTR, "ptr");
 	keywordMap.insert(kToken_UNIQUE, "unique");
 	keywordMap.insert(kToken_SHARED, "shared");
+	keywordMap.insert(kToken_FANCY,  "fancy");
 
 	keywordMap.insert(kToken_IF, "if");
 	keywordMap.insert(kToken_ELSE, "else");
