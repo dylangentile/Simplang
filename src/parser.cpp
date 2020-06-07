@@ -594,7 +594,7 @@ Statement*
 Parser::parseExpr(bool haltComma)
 {
 
-	if(currentToken->mType == kToken_ASSIGN_EQUAL)
+	if(currentToken->mType == kToken_ASSIGN_EQUAL || currentToken->mType == kToken_DECLARE_EQUAL)
 		fetchToken();
 
 	Statement* x = parseBinExpr();
@@ -899,7 +899,7 @@ Parser::parseIntoScope()
 			else if(future->mType == kToken_ASSIGN_EQUAL)
 			{
 				MultipleAssignment* multAss = currentScope()->insertMultipleAssignment();
-				multAss->names.push_back(currentToken->mStr);
+				multAss->insert(currentToken->mStr);
 				multAss->expr = parseExpr();
 
 			}
@@ -912,12 +912,12 @@ Parser::parseIntoScope()
 					if(lookAhead(i+1)->mType == kToken_ASSIGN_EQUAL)
 					{
 						MultipleAssignment* multAss = currentScope()->insertMultipleAssignment();
-						multAss->names.push_back(currentToken->mStr);
+						multAss->insert(currentToken->mStr);
 						fetchToken();
 						while(currentToken->mType != kToken_ASSIGN_EQUAL)
 						{
 							fetchToken();
-							multAss->names.push_back(currentToken->mStr);
+							multAss->insert(currentToken->mStr);
 							fetchToken();
 						}
 						//parse on the = sign

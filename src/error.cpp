@@ -48,13 +48,13 @@ ErrorManager::logError(ErrorType type, Token* location, const char* msg)
 			ptr++;
 		}
 		err += "\n\t";
-		for(int i = 1; i < location->colNum; i++)
+		for(uint32_t i = 1; i < location->colNum; i++)
 			err.push_back(' ');
 		err.push_back('^');
 
 		int offset = location->mCat == kCat_Immediate && location->mType == kToken_STRING ? 2 : 0;
 
-		for(int i = 1; i < location->mStr.size() + offset; i++)
+		for(unsigned long i = 1; i < location->mStr.size() + offset; i++)
 			err.push_back('~');
 
 	}

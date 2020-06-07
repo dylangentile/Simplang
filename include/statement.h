@@ -87,6 +87,7 @@ class FunctionCall;
 class DeclEqual;
 class MultipleAssignment;
 class Return;
+class VariableAccess;
 
 
 class Statement
@@ -163,8 +164,9 @@ public:
 	MultipleAssignment();
 	~MultipleAssignment();
 
-	std::vector<std::string> names; //1st stage
-	std::vector<Variable*> variableRefs; //2nd stage
+	void insert(const std::string&);
+
+	std::vector<VariableAccess*> variableRefs; 
 	Statement* expr;
 };
 

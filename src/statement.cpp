@@ -172,10 +172,17 @@ MultipleAssignment::MultipleAssignment() : Statement(kState_MultipleAssignment),
 
 MultipleAssignment::~MultipleAssignment()
 {
-	//don't delete varible refs, they're deleted elsewhere (they're refrences)
+	for(VariableAccess* it : variableRefs)
+		delete it;
+
 	delete expr;
 }
 
+void 
+MultipleAssignment::insert(const std::string& name)
+{
+	variableRefs.push_back(new VariableAccess(name));
+}
 
 
 Structure::Structure(const std::string& name_, bool isPublic_) 
