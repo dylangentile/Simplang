@@ -1,7 +1,13 @@
 
 
 
-int x = 5 == 7 && 6 == 3;
+int main(string[] argv)
+{
+	
 
+	int x := 12;
 
+	print(x);
 
+	return 0;
+}

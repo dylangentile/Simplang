@@ -31,10 +31,10 @@ private:
 
 	//parseExpr helpers
 	FunctionCall* parseFunctionCall();
-	Statement* parseExpr(bool haltComma = false);
-	Statement* parseBinExpr();
+	Statement* parseExpr(bool haltComma = false, bool haltRPAREN = false);
+	Statement* parseBinExpr(bool haltRPAREN = false);
 	Statement* parseTerm();
-	
+
 	Statement* parseIfStatement();
 
 

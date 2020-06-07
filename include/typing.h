@@ -41,6 +41,7 @@ typedef enum
 	kType_Struct,
 	kType_Ptr,
 	kType_Basic,
+	kType_Array,
 	kType_Unknown
 }TypeID;
 
@@ -83,6 +84,17 @@ public:
 	Type* pointsTo;
 
 };
+
+
+class ArrayType : public Type
+{
+public:
+	ArrayType(Type* itemType, uint64_t size = 0);
+	~ArrayType();
+
+	Type* tType;
+	uint64_t mSize;
+}
 
 class UnknownType : public Type
 {

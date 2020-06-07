@@ -33,3 +33,8 @@ PointerType::~PointerType()
 {
 
 }
+
+ArrayType::ArrayType(Type* itemType, uint64_t size) : Type(kType_Array), tType(itemType), mSize(size)
+{
+	
+}

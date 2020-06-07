@@ -269,8 +269,7 @@ FunctionCall::FunctionCall() : Statement(kState_FunctionCall)
 FunctionCall::~FunctionCall()
 {
 	//don't delete parent func, deleted elsewhere
-	for(Statement* arg : args)
-		delete arg;
+	delete args;
 }
 
 

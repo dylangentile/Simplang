@@ -484,12 +484,14 @@ Parser::parseTerm()
 //https://en.wikipedia.org/wiki/Shunting-yard_algorithm
 //should enter with first term
 Statement*
-Parser::parseBinExpr()
+Parser::parseBinExpr(bool haltRPAREN)
 {
 	std::deque<Statement*> outputDeque;
 	std::stack<TokenType> operatorStack;
 
 	Token* errorToken = currentToken;
+
+	bool parenEnd = false;
 
 	while(	currentToken->mType != kToken_SEMICOLON && currentToken->mType != kToken_COMMA
 		&&	currentToken->mType != kToken_LCURLY) //if statement
@@ -544,12 +546,26 @@ Parser::parseBinExpr()
 				theOp->operand2 = outputDeque.back(); outputDeque.pop_back();
 				theOp->operand1 = outputDeque.back(); outputDeque.pop_back();
 
-				if(operatorStack.empty())
+				if(operatorStack.empty() && !haltRPAREN)
+				{
 					lerror(kE_Fatal, errorToken, "mismatched parentheses!");
+				}
+				else
+				{
+					parenEnd = true;
+					break;
+				}
+
 
 				outputDeque.push_back(dynamic_cast<Statement*>(theOp));
 
 
+			}
+
+			if(parenEnd)
+			{
+				fetchToken();
+				break;
 			}
 
 			operatorStack.pop(); //pop the lParen
@@ -591,26 +607,35 @@ Parser::parseBinExpr()
 
 
 Statement* 
-Parser::parseExpr(bool haltComma)
+Parser::parseExpr(bool haltComma, bool haltRPAREN)
 {
 
 	if(currentToken->mType == kToken_ASSIGN_EQUAL || currentToken->mType == kToken_DECLARE_EQUAL)
 		fetchToken();
 
-	Statement* x = parseBinExpr();
+	Statement* x = parseBinExpr(haltRPAREN);
 
 	if(currentToken->mType == kToken_COMMA && !haltComma)
 	{
 		StatementList* myList = new StatementList();
-		while(currentToken->mType != kToken_SEMICOLON)
+		myList->insert(x);
+
+		while((currentToken->mType != kToken_SEMICOLON && currentToken->mType != kToken_LCURLY ) || (haltRPAREN && currentToken->mType != kToken_RPAREN))
 		{
-			myList->insert(parseBinExpr());
+
+			if(currentToken->mType != kToken_COMMA)
+				lerror(kE_Fatal, currentToken, "expected comma or semicolon!");
+			fetchToken();
+
+			myList->insert(parseBinExpr(haltRPAREN));
+			
+
 		}
 
 		x = dynamic_cast<Statement*>(myList);
 	}
 
-	fetchToken(); //must be a semicolon
+	fetchToken(); //must be a ender
 
 	return x;
 }
@@ -677,7 +702,26 @@ Parser::parseStruct()
 FunctionCall*
 Parser::parseFunctionCall()
 {
-	return nullptr;
+	FunctionCall* theCall = new FunctionCall();
+	if(currentToken->mCat != kCat_WildIdentifier)
+		lerror(kE_Fatal, currentToken, "expected function call identifier!");
+
+	fetchToken();
+
+	if(currentToken->mType != kToken_LPAREN)
+		lerror(kE_Fatal, currentToken, "expected left parenthesis!");
+
+	fetchToken();
+
+	theCall->args = parseExpr(false, true);
+
+	if(currentToken->mType != kToken_SEMICOLON)
+		lerror(kE_Fatal, currentToken, "expected semicolon!");
+
+	fetchToken();
+
+	return theCall;
+
 }
 
 void
@@ -902,6 +946,10 @@ Parser::parseIntoScope()
 				multAss->insert(currentToken->mStr);
 				multAss->expr = parseExpr();
 
+			}
+			else if(future->mType == kToken_LPAREN)
+			{
+				currentScope()->pushStatement(parseFunctionCall());
 			}
 			else
 			{

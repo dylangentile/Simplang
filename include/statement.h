@@ -254,7 +254,7 @@ public:
 
 	Function* parentFunc;// 2nd stage
 	std::string callName;
-	std::vector<Statement*> args;
+	Statement* args;
 };
 
 
