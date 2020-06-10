@@ -11,6 +11,18 @@ Statement::~Statement()
 
 }
 
+void 
+Statement::setDebug(const DebugData& thedata)
+{
+	debug = thedata;
+}
+
+std::vector<Type*>
+Statement::getTypeInfo()
+{
+	return std::vector<Type*>(nullptr);
+}
+
 
 Scope::Scope() : Statement(kState_Scope)
 {
@@ -42,6 +54,8 @@ Scope::insertFunction(Token* tok)
 
 	Function* func = new Function();
 	func->mName = tok->mStr;
+	func->setDebug(tok->mData);
+
 	functionMap.insert(func, tok->mStr);
 	return func;
 
@@ -60,7 +74,8 @@ Scope::insertStruct(Token* tok, bool isPublic)
 
 	StructType* theStruct = new StructType(tok->mStr);
 	theStruct->definition = new Structure(tok->mStr, isPublic);
-	
+	theStruct->definition->setDebug(tok->mData);
+
 	structMap.insert(theStruct, tok->mStr);
 	return theStruct;
 
@@ -74,33 +89,51 @@ Scope::insertVariable(Token* tok, Type* type)
 		lerror(kE_Fatal, tok, "symbol cannot be used for variable name!");
 
 	Variable* var = new Variable(tok->mStr, type);
+	var->setDebug(tok->mData);
+
 	statementVec.push_back(dynamic_cast<Statement*>(var));
 	return var;
 }
 
 
 DeclEqual*
-Scope::insertDeclEqual()
+Scope::insertDeclEqual(Token* tok)
 {
 	DeclEqual* de = new DeclEqual();
+	de->setDebug(tok->mData);
+
 	statementVec.push_back(dynamic_cast<Statement*>(de));
 	return de;
 }
 
 MultipleAssignment*
-Scope::insertMultipleAssignment()
+Scope::insertMultipleAssignment(Token* tok)
 {
 	MultipleAssignment* ma = new MultipleAssignment();
+	ma->setDebug(tok->mData);
+
 	statementVec.push_back(dynamic_cast<Statement*>(ma));
 	return ma;
 }
 
 Return*
-Scope::insertReturn()
+Scope::insertReturn(Token* tok)
 {
 	Return* ret = new Return();
+	ret->setDebug(tok->mData);
+
 	statementVec.push_back(dynamic_cast<Return*>(ret));
 	return ret;
+}
+
+void 
+Scope::pushVariableStage2(Variable* x)
+{
+	auto finder = variableDecl.find(x->mName);
+	if(finder != variableDecl.end())
+		lerror(kE_Fatal, dynamic_cast<Statement*>(x), "duplicate symbol!");
+
+	variableDecl.insert(std::make_pair(x->mName, x));
 }
 
 Type* 
@@ -140,6 +173,12 @@ Variable::Variable(const std::string& name, Type* type)
 Variable::~Variable()
 {
 	delete mInitializer;
+}
+
+std::vector<Type*>
+Variable::getTypeInfo()
+{
+	return std::vector<Type*>(mType);
 }
 
 

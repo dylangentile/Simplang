@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <vector>
 
 class Structure;
 
@@ -42,6 +43,7 @@ typedef enum
 	kType_Ptr,
 	kType_Basic,
 	kType_Array,
+	kType_Multiple,
 	kType_Unknown
 }TypeID;
 
@@ -94,7 +96,20 @@ public:
 
 	Type* tType;
 	uint64_t mSize;
-}
+};
+
+class MultipleType : public Type
+{
+public:
+	MultipleType();
+	~MultipleType();
+	void insert(Type*);
+
+	std::vector<Type*> typeVec;
+
+	bool compare(const MultipleType* const other) const;
+
+};
 
 class UnknownType : public Type
 {

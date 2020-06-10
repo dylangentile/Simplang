@@ -23,9 +23,10 @@ private:
 	std::string mContent;
 	std::string::iterator fileIt;
 	uint32_t currentLine = 1, currentCol = 0;
+	uint32_t* counter;
+	const char* linePointer;
 
 	std::vector<Token*> tokenVec;
-	std::vector<DebugData*> debugDataVec;
 
 
 

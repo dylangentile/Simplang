@@ -32,38 +32,43 @@ ErrorManager::destroy()
 }
 
 void
-ErrorManager::logError(ErrorType type, Token* location, const char* msg)
+ErrorManager::logDB(ErrorType type, DebugData* loc, const char* msg)
 {
 	assert(gErrorManager != nullptr && "Need to create the error manager!");
 
 	std::string err;
-
-	if(location != nullptr)
+	if(loc != nullptr)
 	{
-		err = "Line #" + std::to_string(location->mData->lineNum) + ": " + std::string(msg) + "\n\t";// + " '" + location->mStr + "'\n\t";
-		const char* ptr = location->mData->linePtr;
-		while(*ptr != 0 && *ptr != '\0' && *ptr != '\n')
+
+		const char* ptr = loc->linePtr;
+		if(ptr == nullptr)
+		{
+			goto ZAWARUDO;
+		}
+
+
+		err = "Line #" + std::to_string(loc->lineNum) + ": " + std::string(msg) + "\n\t";
+		
+		while(*ptr != '\0' && *ptr != '\n')
 		{
 			err.push_back(*ptr);
 			ptr++;
 		}
+
 		err += "\n\t";
-		for(uint32_t i = 1; i < location->colNum; i++)
+		for(uint32_t i = 1; i < loc->offset; i++)
 			err.push_back(' ');
 		err.push_back('^');
 
-		int offset = location->mCat == kCat_Immediate && location->mType == kToken_STRING ? 2 : 0;
-
-		for(unsigned long i = 1; i < location->mStr.size() + offset; i++)
+		for(uint32_t i = 1; i < loc->length; i++)
 			err.push_back('~');
-
 	}
 	else
 	{
+		ZAWARUDO:
 		err = std::string(msg);
 	}
 	err += "\n\n";
-	
 
 	if(type == kE_Error || type == kE_Fatal)
 	{
@@ -81,7 +86,25 @@ ErrorManager::logError(ErrorType type, Token* location, const char* msg)
 		printf("%s\n", gErrorManager->report().c_str());
 		exit(0);
 	}
+}
 
+void
+ErrorManager::logError(ErrorType type, Token* location, const char* msg)
+{
+	assert(gErrorManager != nullptr && "Need to create the error manager!");
+
+	logDB(type, &location->mData, msg);
+	
+
+
+}
+
+void 
+ErrorManager::logError(ErrorType type, Statement* state, const char* msg)
+{
+	assert(gErrorManager != nullptr && "Need to create the error manager!");
+
+	logDB(type, &state->debug, msg);
 
 }
 

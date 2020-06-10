@@ -36,5 +36,48 @@ PointerType::~PointerType()
 
 ArrayType::ArrayType(Type* itemType, uint64_t size) : Type(kType_Array), tType(itemType), mSize(size)
 {
+
+}
+
+ArrayType::~ArrayType()
+{
 	
 }
+
+MultipleType::MultipleType() : Type(kType_Multiple)
+{
+
+}
+
+MultipleType::~MultipleType()
+{
+
+}
+
+void
+MultipleType::insert(Type* type)
+{
+	typeVec.push_back(type);
+}
+bool 
+MultipleType::compare(const MultipleType* const other) const
+{
+	return std::equal(this->typeVec.begin(), this->typeVec.end(), other->typeVec.begin());
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,5 +1,6 @@
 #pragma once
 #include "token.h"
+#include "statement.h"
 
 typedef enum
 {
@@ -19,8 +20,10 @@ private:
 public:
 	//static void logError(ErrorType type, const char* msg, ...);
 	static ErrorManager* create();
-	static void destroy(); 
+	static void destroy();
+	static void logDB(ErrorType type, DebugData* loc, const char* msg); 
 	static void logError(ErrorType type, Token* location, const char* msg);
+	static void logError(ErrorType type, Statement* state, const char* msg);
 	//inline static void logError(ErrorType type, Token* token, const char* msg){ logError(type, token->mData, msg);}
 	static bool haveErrors();
 	static std::string report();
@@ -43,6 +46,6 @@ private:
 
 #define lerror(type, location, msg) ErrorManager::logError(type, location, msg);
 #define lwarning(location, msg) ErrorManager::logError(kE_Warning, location, msg);
-
+#define lerrorSTR(type, msg) ErrorManager::logDB(type, nullptr, msg);
 
 

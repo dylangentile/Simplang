@@ -7,7 +7,7 @@ Lexer::Lexer(const char* filename)
 {
 	std::ifstream ifs(filename);
 	if(!ifs)
-		lerror(kE_Fatal, nullptr, "Invalid file path!");
+		lerrorSTR(kE_Fatal, "Invalid file path!");
 	mContent = std::string((std::istreambuf_iterator<char>(ifs) ),
 						   (std::istreambuf_iterator<char>()   ));
 
@@ -123,15 +123,11 @@ Lexer::Lexer(const char* filename)
 	operatorMap.insert(kToken_BIT_COMPL, "~");
 
 
-	debugDataVec.push_back(new DebugData(mContent.c_str(), 1));
+	linePointer = mContent.c_str();
 }
 
 Lexer::~Lexer()
 {
-	for(auto it = debugDataVec.begin(); it != debugDataVec.end(); it++)
-	{
-		delete *it;
-	}
 
 	for(auto it = tokenVec.begin(); it != tokenVec.end(); it++)
 	{
@@ -189,11 +185,14 @@ Lexer::fetchChar()
 	{
 		currentLine++;
 		currentCol = 0;
-		debugDataVec.push_back(new DebugData(mContent.c_str() + std::distance(mContent.begin(), fileIt), currentLine));
+		linePointer = mContent.c_str() + std::distance(mContent.begin(), fileIt);
 	}
 
 	if(c1 == '\t')
+	{
 		currentCol += 7;
+		(*counter) += 7;
+	}
 
 	c1 = *fileIt;
 	fileIt++;
@@ -202,6 +201,7 @@ Lexer::fetchChar()
 	else
 		c2 = *fileIt;
 
+	(*counter)++;
 	currentCol++;
 }
 
@@ -226,9 +226,13 @@ Lexer::fetchToken()
 		goto charCleanup;
 	}
 
+	
+
 	Token* theToken = new Token;
-	theToken->mData = debugDataVec.back();
-	theToken->colNum = currentCol;
+	theToken->mData.linePtr = linePointer;
+	theToken->mData.offset = currentCol;
+	theToken->mData.lineNum = currentLine;
+	counter = &theToken->mData.length;
 
 	if(isAlpha(c1) || c1 == '_')
 	{
@@ -370,6 +374,8 @@ Lexer::fetchToken()
 std::vector<Token*>*
 Lexer::lex()
 {
+	uint32_t temp = 0;
+	counter = &temp;
 	Token* theToken = nullptr;
 	fetchChar();
 	while(true)
@@ -381,6 +387,8 @@ Lexer::lex()
 			lerror(kE_Error, theToken, "unknown token!");
 
 		tokenVec.push_back(theToken);
+		counter = &temp;
+		temp = 0;
 	}
 
 

@@ -80,7 +80,7 @@ typedef enum
 	kPostOp_SFNAV //?.
 }PostfixOpID;
 
-
+class Scope;
 class Function;
 class Variable;
 class FunctionCall;
@@ -88,6 +88,18 @@ class DeclEqual;
 class MultipleAssignment;
 class Return;
 class VariableAccess;
+class StatementList;
+
+
+
+class Stage1Program
+{
+public:
+	Stage1Program();
+	~Stage1Program();
+};
+
+
 
 
 class Statement
@@ -96,7 +108,10 @@ public:
 	Statement(StatementID id_);
 	virtual ~Statement();
 
+	virtual void setDebug(const DebugData&);
+	virtual Type* getTypeInfo();
 	const StatementID mId;
+	DebugData debug;
 
 };
 
@@ -112,10 +127,13 @@ public:
 	Function* 			insertFunction(Token* tok);
 	StructType* 		insertStruct(Token* tok, bool isPublic);
 	Variable* 			insertVariable(Token* tok, Type* type);
-	DeclEqual* 			insertDeclEqual();
-	MultipleAssignment*	insertMultipleAssignment();
-	Return*				insertReturn();
+	DeclEqual* 			insertDeclEqual(Token*);
+	MultipleAssignment*	insertMultipleAssignment(Token*);
+	Return*				insertReturn(Token*);
 	void				pushStatement(Statement*);
+
+
+	void pushVariableStage2(Variable*);
 
 	Type* getType(const std::string& name);
 
@@ -125,6 +143,8 @@ public:
 	BiMap<Function*, std::string, Function*, std::string> functionMap;
 	BiMap<UnknownType*, std::string, UnknownType*, std::string> unknownTypeMap; 
 
+
+	std::unordered_map<std::string, Variable*> variableDecl;
 	
 	std::vector<Statement*> statementVec;
 
@@ -135,6 +155,8 @@ class Variable : public Statement
 public:
 	Variable(const std::string& name, Type* type);
 	~Variable();
+	virtual Type* getTypeInfo() override;
+
 
 	std::string mName;
 	Type* mType;
@@ -153,6 +175,7 @@ public:
 	
 	std::vector<Variable*> varVec;
 	Statement* mInitializer;
+
 
 
 	
@@ -190,10 +213,13 @@ public:
 	Function();
 	~Function();
 
-	std::vector<Type*> typeVec;
+	MultipleType* typeVec;
 
 	std::string mName;
 	std::vector<Variable*> args;
+	
+	MultipleType* argTypes;
+
 	Scope* mBody;
 };
 
@@ -254,7 +280,9 @@ public:
 
 	Function* parentFunc;// 2nd stage
 	std::string callName;
-	Statement* args;
+	
+	StatementList* args;
+	MultipleType* argTypes;
 };
 
 

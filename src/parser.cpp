@@ -39,10 +39,10 @@ getOperatorPrecedence(const BinaryOperationID& x)
 		
 		case kOp_NULLCC: return 16;
 		break;
-		case kOp_NULL: lerror(kE_Fatal, nullptr, "invalid call!");
+		case kOp_NULL: lerrorSTR(kE_Fatal, "invalid call!");
 	}
 
-	lerror(kE_Fatal, nullptr, "invalid call!");
+	lerrorSTR(kE_Fatal, "invalid call!");
 	return 1000000; //to shut up clang
 
 }
@@ -257,6 +257,25 @@ Parser::getTypeList(std::vector<Type*>& typeVec)
 			lerror(kE_Error, currentToken, "Declared unique/shared attribute of non-pointer type!");
 		}
 
+
+		if(lookAhead(1)->mType == kToken_LBRACKET)
+		{
+			fetchToken();
+			fetchToken();
+
+			ArrayType* arr = new ArrayType(cType);
+			cType = dynamic_cast<Type*>(arr);
+
+
+			if(currentToken->mType != kToken_RBRACKET && currentToken->mCat == kCat_Immediate)
+			{
+				if(currentToken->mType != kToken_UINT64)
+					lerror(kE_Fatal, currentToken, "expected integer!");
+
+				arr->mSize = std::stoull(currentToken->mStr);
+				fetchToken();
+			}
+		}
 
 		if(cType == nullptr)
 				lerror(kE_Error, currentToken, "invalid type!");
@@ -713,12 +732,16 @@ Parser::parseFunctionCall()
 
 	fetchToken();
 
-	theCall->args = parseExpr(false, true);
-
-	if(currentToken->mType != kToken_SEMICOLON)
-		lerror(kE_Fatal, currentToken, "expected semicolon!");
-
-	fetchToken();
+	Statement* theArgs = parseExpr(false, true);
+	if(theArgs->mId != kState_StatementList)
+	{
+		theCall->args = new StatementList;
+		theCall->args->insert(theArgs);
+	}
+	else
+	{
+		theCall->args = dynamic_cast<StatementList*>(theArgs);
+	}
 
 	return theCall;
 
@@ -841,82 +864,53 @@ Parser::parseIntoScope()
 	Token* prevToken = currentToken;
 	while(currentToken != nullptr && currentToken != nullToken)
 	{
-
 		if(currentToken->mType == kToken_RCURLY)
-		{
 			break;
-		}
-
+		
 		if(currentToken->mCat == kCat_Keyword)
 		{
-			if(currentToken->mType == kToken_UNIQUE || currentToken->mType == kToken_SHARED)
+			switch(currentToken->mType)
 			{
-				handleType();
-			}
-			else if(currentToken->mType == kToken_IF)
-			{
-				currentScope()->pushStatement(parseIfStatement());
-			}
-			else if(currentToken->mType == kToken_ELSE)
-			{
-				lerror(kE_Fatal, currentToken, "floating else! No if preceding it!");
-			}
-			else if(currentToken->mType == kToken_FOR)
-			{
-
-			}
-			else if(currentToken->mType == kToken_WHILE)
-			{
-
-			}
-			else if(currentToken->mType == kToken_MATCH)
-			{
-
-			}
-			else if(currentToken->mType == kToken_BREAK)
-			{
-
-			}
-			else if(currentToken->mType == kToken_CONTINUE)
-			{
-
-			}
-			else if(currentToken->mType == kToken_RETURN)
-			{
-				Return* tRotK = currentScope()->insertReturn();
-				fetchToken();
-				tRotK->expr = parseExpr();
-			}
-			else if(currentToken->mType == kToken_ENUM)
-			{
-
-			}
-			else if(currentToken->mType == kToken_STRUCT)
-			{
-				parseStruct();
-			}
-			else if(currentToken->mType == kToken_USE)
-			{
-
-			}
-			else if(currentToken->mType == kToken_IMPORT)
-			{
-
-			}
-			else if(currentToken->mType == kToken_UNIT) 
-			{
-
-			}
-			else if(currentToken->mType == kToken_CINCLUDE)
-			{
-				lerror(kE_Error, currentToken, "Reserved Keyword!");
-			}
-			else if(currentToken->mType == kToken_ISNULL)
-			{
-
-			}
-			else if(currentToken->mType == kToken_SIZEOF)
-			{
+				case kToken_UNIQUE:
+				case kToken_SHARED: handleType();
+				break;
+				case kToken_IF: currentScope()->pushStatement(parseIfStatement());
+				break;
+				case kToken_ELSE: lerror(kE_Fatal, currentToken, "floating else! No if preceding it!");
+				break;
+				case kToken_FOR:
+				break;
+				case kToken_WHILE:
+				break;
+				case kToken_MATCH:
+				break;
+				case kToken_BREAK:
+				break;
+				case kToken_CONTINUE:
+				break;
+				case kToken_RETURN:
+				{
+					Return* tRotK = currentScope()->insertReturn(currentToken);
+					fetchToken();
+					tRotK->expr = parseExpr();
+				}
+				break;
+				case kToken_ENUM:
+				break;
+				case kToken_STRUCT: parseStruct();
+				break;
+				case kToken_USE:
+				break;
+				case kToken_IMPORT:
+				break;
+				case kToken_UNIT:
+				break;
+				case kToken_CINCLUDE:
+				break;
+				case kToken_ISNULL:
+				break;
+				case kToken_SIZEOF:
+				break;
 
 			}
 		}
@@ -942,7 +936,7 @@ Parser::parseIntoScope()
 			}
 			else if(future->mType == kToken_ASSIGN_EQUAL)
 			{
-				MultipleAssignment* multAss = currentScope()->insertMultipleAssignment();
+				MultipleAssignment* multAss = currentScope()->insertMultipleAssignment(currentToken);
 				multAss->insert(currentToken->mStr);
 				multAss->expr = parseExpr();
 
@@ -959,7 +953,7 @@ Parser::parseIntoScope()
 
 					if(lookAhead(i+1)->mType == kToken_ASSIGN_EQUAL)
 					{
-						MultipleAssignment* multAss = currentScope()->insertMultipleAssignment();
+						MultipleAssignment* multAss = currentScope()->insertMultipleAssignment(currentToken);
 						multAss->insert(currentToken->mStr);
 						fetchToken();
 						while(currentToken->mType != kToken_ASSIGN_EQUAL)
@@ -974,7 +968,7 @@ Parser::parseIntoScope()
 					}
 					else if(lookAhead(i+1)->mType == kToken_DECLARE_EQUAL)
 					{
-						DeclEqual* dEq = currentScope()->insertDeclEqual();
+						DeclEqual* dEq = currentScope()->insertDeclEqual(currentToken);
 						dEq->insert(currentToken->mStr);
 						fetchToken();
 						while(currentToken->mType != kToken_DECLARE_EQUAL)
@@ -1019,16 +1013,101 @@ Parser::parseIntoScope()
 	}
 
 	if(scopeStack.size() == 1 && currentToken != nullptr && currentToken != nullToken)
-		lerror(kE_Warning, nullptr, "Extra rcurly at end!");
+		lerrorSTR(kE_Warning, "Extra rcurly at end of file!");
 
 }
 
 
 
+void
+Parser::validateStatement(Statement* state)
+{
+	switch(state->mId)
+	{
+		case kState_NULL: lerror(kE_Fatal, state, "compiler error: null statement!");
+		break;
+		case kState_Scope: validateSymbols(dynamic_cast<Scope*>(state));
+		break;
+		case kState_Variable:
+		break;
+		case kState_VariableAccess:
+		{
+			VariableAccess* varRef = dynamic_cast<VariableAccess*>(state);	
+			for(auto it = scopeStack.rbegin(); it != scopeStack.rend(); it++)
+			{
+				auto finder = (*it)->variableDecl.find(varRef->mName);
+				if(finder != (*it)->variableDecl.end())
+				{
+					varRef->refrencing = finder->second;
+					break;
+				}
 
+			}
+		}
+		break;
+		case kState_Structure: //we don't need to do anything
+		break;
+		case kState_Function: //don't need to do anything
+		break;
+		case kState_FunctionCall: 
+		{
+			//find the function it is calling
+			FunctionCall* funcCall = dynamic_cast<FunctionCall*>(state);
+			for(auto it = scopeStack.rbegin(); it != scopeStack.rend(); it++)
+			{
+				Function** finder = (*it)->functionMap.find(funcCall->callName);
+				if(finder != nullptr)
+				{
+					funcCall->parentFunc = *finder;
+					break;
+				}
+			}
 
+		
+		}
+		break;
 
+		case kState_If:
+		break;
 
+		case kState_ImmediateExpr:
+		break;
+		case kState_BinOpExpr:
+		break;
+
+		case kState_DeclEqual:
+		break;
+		case kState_MultipleAssignment:
+		break;
+		case kState_Return:
+		break;
+
+		case kState_StatementList:
+		break;
+		case kState_Term:
+		break;
+
+	}
+}
+
+std::deque<Scope*> scopeStack;
+
+void
+Parser::validateSymbols(Scope* scope)
+{
+	scopeStack.push_back(scope);
+	for(Statement* state : scope->statementVec)
+	{
+		validateStatement(state);
+	}
+	scopeStack.pop_back();
+}
+
+void
+Parser::typeAnalysis()
+{
+	
+}
 
 
 Scope*
@@ -1045,6 +1124,9 @@ Parser::parse()
 
 	scopeStack.push_back(globalScope);
 	parseIntoScope();
+
+	validateSymbols(globalScope);
+	typeAnalysis();
 
 
 	return globalScope;

@@ -19,6 +19,11 @@ public:
 	std::string unitName;
 private:
 
+
+	void validateSymbols(Scope*);
+	void validateStatement(Statement*);
+	void typeAnalysis();
+
 	void getDefs();
 
 	

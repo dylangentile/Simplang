@@ -1,11 +1,11 @@
 
 
 
-int main(string[] argv)
+int main(string[] : argv)
 {
 	
 
-	int x := 12;
+	int x = 12;
 
 	print(x);
 
