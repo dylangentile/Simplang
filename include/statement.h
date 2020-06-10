@@ -97,6 +97,11 @@ class Stage1Program
 public:
 	Stage1Program();
 	~Stage1Program();
+
+
+
+	Scope* globalScope;
+
 };
 
 
@@ -213,7 +218,7 @@ public:
 	Function();
 	~Function();
 
-	MultipleType* typeVec;
+	Type* mType;
 
 	std::string mName;
 	std::vector<Variable*> args;

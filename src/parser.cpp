@@ -186,9 +186,11 @@ Parser::lookAhead(uint32_t offset)
 
 
 
-void
-Parser::getTypeList(std::vector<Type*>& typeVec)
+MultipleType*
+Parser::getTypeList()
 {
+
+	MultipleType* theTypeList = new MultipleType();
 	do
 	{
 		Type* cType = nullptr;
@@ -208,10 +210,10 @@ Parser::getTypeList(std::vector<Type*>& typeVec)
 
 		if(currentToken->mCat == kCat_BasicType)
 		{
-			Type** fType = typeMap[currentToken->mType];
-			if(fType == nullptr)
+			auto fType = typeMap.find(currentToken->mType);
+			if(typeMap.isEnd(fType))
 				lerror(kE_Fatal, currentToken, "Compiler error code: 0x001 -- Please Report");
-			cType = *fType;
+			cType = fType->second;
 			
 		}
 		else if(currentToken->mCat == kCat_WildIdentifier)
@@ -280,43 +282,43 @@ Parser::getTypeList(std::vector<Type*>& typeVec)
 		if(cType == nullptr)
 				lerror(kE_Error, currentToken, "invalid type!");
 
-		typeVec.push_back(cType);
+		theTypeList->insert(cType);
 
 		if(fetchToken()->mType != kToken_COMMA)
 			break;
 		fetchToken();
 
 	} while(true);
+
+	return theTypeList;
 }
 
 
 void
 Parser::handleType(std::vector<Variable*>* varVec)
 {
-	std::vector<Type*> typeVec;
-	//todo: Type Initializers
-	//std::vector<Immediate*>  immediateVec;
-	getTypeList(typeVec/*,immediateVec*/ );
+	
+	MultipleType* types = getTypeList();
 
-	if(typeVec.size() < 1)
+	if(types->typeVec.size() < 1)
 	{
 		lerror(kE_Fatal, currentToken, "cannot form variable from invalid type list!");
 	}
 
 	if(currentToken->mCat == kCat_WildIdentifier)
 	{
-		if(typeVec.size() > 1 || lookAhead(1)->mType == kToken_LPAREN)
+		if(types->typeVec.size() > 1 || lookAhead(1)->mType == kToken_LPAREN)
 		{
-			parseFunction(typeVec);
+			parseFunction(types);
 		}
 		else
 		{
 			Variable* var = nullptr;
 			if(varVec == nullptr)
-			 	var = currentScope()->insertVariable(currentToken, typeVec[0]);
+			 	var = currentScope()->insertVariable(currentToken, types->typeVec[0]);
 			else
 			{
-				var = new Variable(currentToken->mStr, typeVec[0]);
+				var = new Variable(currentToken->mStr, types->typeVec[0]);
 				varVec->push_back(var);
 			}
 			
@@ -335,7 +337,7 @@ Parser::handleType(std::vector<Variable*>* varVec)
 
 		
 
-		auto it = typeVec.begin();
+		auto it = types->typeVec.begin();
 
 		do
 		{
@@ -365,11 +367,11 @@ Parser::handleType(std::vector<Variable*>* varVec)
 
 			fetchToken();
 
-			if(it + 1 != typeVec.end())
+			if(it + 1 != types->typeVec.end())
 				it++;
 		} while(true);
 
-		if(it + 1 != typeVec.end())
+		if(it + 1 != types->typeVec.end())
 			lerror(kE_Warning, currentToken, "More types than variables!");
 	}
 }
@@ -455,14 +457,14 @@ Parser::parseTerm()
 		if(theTerm != nullptr)
 			lerror(kE_Fatal, currentToken, "cannot use prefix operator on immediate values!");
 
-		Type** tfinder = typeMap[currentToken->mType];
-		if(tfinder == nullptr)
+		auto tfinder = typeMap.find(currentToken->mType);
+		if(typeMap.isEnd(tfinder))
 			lerror(kE_Fatal, currentToken, "compiler error, miscategorization or un-implemented type!");
 
-		if((*tfinder)->mId != kType_Basic)
+		if(tfinder->second->mId != kType_Basic)
 			lerror(kE_Fatal, currentToken, "compiler error! somehow this got categorized as a non-basic type immediate!");
 
-		Immediate* val = new Immediate(dynamic_cast<BasicType*>(*tfinder));
+		Immediate* val = new Immediate(dynamic_cast<BasicType*>(tfinder->second));
 		if(!val->parseValue(currentToken->mStr))
 			lerror(kE_Fatal, currentToken, "invalid immediate value!");
 
@@ -748,18 +750,18 @@ Parser::parseFunctionCall()
 }
 
 void
-Parser::parseFunction(const std::vector<Type*>& typeVec)
+Parser::parseFunction(Type* funcType)
 {
 	Function* func = currentScope()->insertFunction(currentToken);
-	func->typeVec = typeVec;
+	func->mType = funcType;
 	fetchToken();
 	if(currentToken->mType != kToken_LPAREN)
 		lerror(kE_Fatal, currentToken, "expected lparen");
 
 	fetchToken();
 
-	std::vector<Type*> argTypeVec;
-	getTypeList(argTypeVec);
+	
+	MultipleType* argTypes = getTypeList();
 
 	if(currentToken->mType != kToken_COLON)
 		lerror(kE_Fatal, currentToken, "expected colon!");
@@ -768,7 +770,7 @@ Parser::parseFunction(const std::vector<Type*>& typeVec)
 
 		
 
-	auto it = argTypeVec.begin();
+	auto it = argTypes->typeVec.begin();
 
 	do
 	{
@@ -791,11 +793,11 @@ Parser::parseFunction(const std::vector<Type*>& typeVec)
 
 		fetchToken();
 
-		if(it + 1 != argTypeVec.end())
+		if(it + 1 != argTypes->typeVec.end())
 			it++;
 	} while(true);
 
-	if(it + 1 != argTypeVec.end())
+	if(it + 1 != argTypes->typeVec.end())
 		lerror(kE_Fatal, currentToken, "More types than args!");
 
 	fetchToken();
@@ -1055,10 +1057,10 @@ Parser::validateStatement(Statement* state)
 			FunctionCall* funcCall = dynamic_cast<FunctionCall*>(state);
 			for(auto it = scopeStack.rbegin(); it != scopeStack.rend(); it++)
 			{
-				Function** finder = (*it)->functionMap.find(funcCall->callName);
-				if(finder != nullptr)
+				auto finder = (*it)->functionMap.find(funcCall->callName);
+				if(!(*it)->functionMap.isEnd(finder))
 				{
-					funcCall->parentFunc = *finder;
+					funcCall->parentFunc = finder->second;
 					break;
 				}
 			}

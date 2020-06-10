@@ -54,15 +54,15 @@ void printType(Type* t)
 			break;
 		}
 	}
-}
-
-void printTypeVec(const std::vector<Type*>& typeVec)
-{
-	for(Type* t : typeVec)
+	else if(t->mId == kType_Multiple)
 	{
-		printType(t);
+		MultipleType* mult = dynamic_cast<MultipleType*>(t);
+		for(Type* x : mult->typeVec)
+			printType(x);
 	}
 }
+
+
 
 void printStatement(Statement* state, int tabs)
 {
@@ -180,7 +180,7 @@ void printScope(Scope* scope, int tabs)
 	for(auto it = scope->functionMap.map1.begin(); it != scope->functionMap.map1.end(); it++)
 	{
 		printTabs(tabs);
-		printTypeVec(it->first->typeVec);
+		printType(it->first->mType);
 		printf("Function (");
 		for(Variable* arg : it->first->args)
 		{

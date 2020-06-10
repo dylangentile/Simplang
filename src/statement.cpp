@@ -1,6 +1,33 @@
 #include "statement.h"
 #include "error.h"
 
+
+
+Stage1Program::Stage1Program()
+{
+
+}
+
+Stage1Program::~Stage1Program()
+{
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 Statement::Statement(StatementID id) : mId(id)
 {
 
@@ -17,10 +44,10 @@ Statement::setDebug(const DebugData& thedata)
 	debug = thedata;
 }
 
-std::vector<Type*>
+Type*
 Statement::getTypeInfo()
 {
-	return std::vector<Type*>(nullptr);
+	return nullptr;
 }
 
 
@@ -40,7 +67,7 @@ Scope::~Scope()
 bool
 Scope::usedSymbol(const std::string& name)
 {
-	return structMap[name] != nullptr || functionMap[name] != nullptr || enumMap[name] != nullptr;
+	return structMap.contains(name) || functionMap.contains(name) || enumMap.contains(name);
 }
 
 Function* 			
@@ -175,10 +202,10 @@ Variable::~Variable()
 	delete mInitializer;
 }
 
-std::vector<Type*>
+Type*
 Variable::getTypeInfo()
 {
-	return std::vector<Type*>(mType);
+	return mType;
 }
 
 

@@ -31,7 +31,7 @@ private:
 	Token* lookAhead(uint32_t offset);
 
 	Type* findType(Token* theToken);
-	void getTypeList(std::vector<Type*>& typeVec);
+	MultipleType* getTypeList();
 
 
 	//parseExpr helpers
@@ -48,7 +48,7 @@ private:
 
 
 	void parseStruct();
-	void parseFunction(const std::vector<Type*>& typeVec);
+	void parseFunction(Type*);
 	void handleType(std::vector<Variable*>* varVec = nullptr);
 
 	void initScopeParse(Scope*);
