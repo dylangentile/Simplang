@@ -67,8 +67,6 @@ Temporary Items
 # generated for us!
 *.exe
 *.o
-Makefile
-Makefile.in
 TAGS
 aclocal.m4
 compile
