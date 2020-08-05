@@ -327,7 +327,7 @@ VariableAccess::~VariableAccess()
 }
 
 
-FunctionCall::FunctionCall() : Statement(kState_FunctionCall)
+FunctionCall::FunctionCall() : Statement(kState_FunctionCall), parentFunc(nullptr), args(nullptr), argTypes(nullptr)
 {
 
 }

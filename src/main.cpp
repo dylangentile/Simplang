@@ -1,5 +1,6 @@
 #include "error.h"
 #include "parser.h"
+#include "analyze.h"
 #include <cstdio>
 
 inline void printTabs(int x)
@@ -211,8 +212,10 @@ int main(int argc, const char *argv[])
 
 	Parser* myParser = new Parser(argv[1]);
 	Scope* tree = myParser->parse();
-
-
+	for(auto func_pair : tree->functionMap.map1)
+	{
+		validateSymbols(func_pair.first->mBody);
+	}
 
 	//if(ErrorManager::haveErrors())
 		printf("%s\n", ErrorManager::report().c_str());

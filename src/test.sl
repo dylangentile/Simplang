@@ -1,6 +1,11 @@
 
 
 
+void print(int : arg)
+{
+	arg++;
+}
+
 int main(string[] : argv)
 {
 	
